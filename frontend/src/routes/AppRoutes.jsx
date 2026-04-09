@@ -18,7 +18,8 @@ export default function AppRoutes() {
     <Routes>
 
       {/* Auth Routes (No Layout) */}
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Register />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       {/* Protected / Main App Routes */}
