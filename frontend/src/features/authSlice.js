@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { mockUser, mockBalance, mockTransactions, mockSavingsPlans } from "./mockData";
+import { mockUser, mockBalance, mockTransactions, mockSavingsPlans } from "../service/mockApi";
 
 const initialState = {
   user: mockUser,
