@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTransactions } from "../../features/transactionSlice";
+import { fetchTransactions } from "../../features/authSlice";
 import "./transactions.css";
 
 const ACCOUNT_ID = "acc_001";
@@ -18,7 +18,9 @@ const formatDate = (value) =>
 
 export default function Transactions() {
   const dispatch = useDispatch();
-  const { status, error, items } = useSelector((state) => state.transactions);
+  const { status, error, items } = useSelector(
+    (state) => state.auth.transactions
+  );
 
   const [typeFilter, setTypeFilter] = useState("all");
   const [rangeFilter, setRangeFilter] = useState("30");

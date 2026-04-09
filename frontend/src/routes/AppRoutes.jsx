@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Auth pages
 import Login from '../pages/Auth/Login';
@@ -18,17 +18,16 @@ export default function AppRoutes() {
     <Routes>
 
       {/* Auth Routes (No Layout) */}
-      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       {/* Protected / Main App Routes */}
-      <Route element={<AppLayout />}>
-
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/deposit" element={<Deposit />} />
-        <Route path="/withdraw" element={<Withdraw />} />
-        <Route path="/transactions" element={<Transactions />} />
-
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<Navigate to="transactions" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="deposit" element={<Deposit />} />
+        <Route path="withdraw" element={<Withdraw />} />
+        <Route path="transactions" element={<Transactions />} />
       </Route>
 
       {/* Fallback Route */}

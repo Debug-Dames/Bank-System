@@ -1,14 +1,16 @@
-import Navbar from './Navbar';
-import Sidebar from './Sidebar';
-import './styles/layout.css';
+import { Outlet } from "react-router-dom";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import "./styles/layout.css";
 
-export default function AppLayout({ children }) {
+export default function AppLayout() {
   return (
     <div className="layout">
       <Sidebar />
       <div className="main">
         <Navbar />
-        <div className="content">{children}</div>
+        <div className="content">
+        </div>
       </div>
     </div>
   );
