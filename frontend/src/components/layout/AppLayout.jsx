@@ -10,6 +10,7 @@ export default function AppLayout() {
       <div className="main">
         <Navbar />
         <div className="content">
+          <Outlet />
         </div>
       </div>
     </div>

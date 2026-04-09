@@ -23,7 +23,7 @@ export default function AppRoutes() {
 
       {/* Protected / Main App Routes */}
       <Route path="/" element={<AppLayout />}>
-        <Route index element={<Navigate to="transactions" replace />} />
+        <Route index element={<Transactions />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="deposit" element={<Deposit />} />
         <Route path="withdraw" element={<Withdraw />} />
