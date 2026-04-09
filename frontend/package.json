@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "set VITE_DISABLE_NET_USE=1&& vite",
+    "build": "set VITE_DISABLE_NET_USE=1&& vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "set VITE_DISABLE_NET_USE=1&& vite preview"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",

@@ -1,0 +1,524 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+/* Palette (from your swatches) */
+/* ink: #0b0b0b, charcoal: #1c1c1c, gold: #c3a033, light-gold: #ead07a, olive: #6f5e23 */
+
+.dashboard-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
+
+  background:
+    radial-gradient(900px 700px at 18% 18%, rgba(234, 208, 122, 0.12), transparent 62%),
+    radial-gradient(900px 700px at 82% 28%, rgba(111, 94, 35, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 60% 90%, rgba(195, 160, 51, 0.10), transparent 58%),
+    linear-gradient(140deg, #0b0b0b, #0f0f0f 55%, #0b0b0b);
+}
+
+.dashboard {
+  --ink: #0b0b0b;
+  --charcoal: #1c1c1c;
+  --gold: #c3a033;
+  --gold-soft: rgba(195, 160, 51, 0.30);
+  --light-gold: #ead07a;
+  --olive: #6f5e23;
+  --text: rgba(255, 250, 235, 0.92);
+  --muted: rgba(255, 250, 235, 0.70);
+  --stroke: rgba(234, 208, 122, 0.18);
+  --shadow: 0 40px 90px rgba(0, 0, 0, 0.62);
+
+  width: min(1220px, 100%);
+  height: min(840px, calc(100vh - 56px));
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 270px 1fr;
+
+  border-radius: 26px;
+  border: 1px solid rgba(234, 208, 122, 0.18);
+  box-shadow: var(--shadow);
+
+  background:
+    radial-gradient(1200px 600px at 20% 0%, rgba(195, 160, 51, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(28, 28, 28, 0.70), rgba(11, 11, 11, 0.72));
+  color: var(--text);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dashboard .sidebar {
+  padding: 22px;
+  border-right: 1px solid rgba(234, 208, 122, 0.12);
+  background:
+    radial-gradient(500px 280px at 40% 0%, rgba(195, 160, 51, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(11, 11, 11, 0.55), rgba(28, 28, 28, 0.20));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(234, 208, 122, 0.10);
+}
+
+.dashboard .brand-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 35%, var(--light-gold), var(--gold));
+  box-shadow: 0 0 0 6px rgba(195, 160, 51, 0.12);
+}
+
+.dashboard .brand-name {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.dashboard .nav-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(234, 208, 122, 0.12);
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(255, 250, 235, 0.86);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: transform 130ms ease, background 130ms ease, border-color 130ms ease;
+}
+
+.dashboard .nav-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.06);
+  border-color: rgba(234, 208, 122, 0.22);
+}
+
+.dashboard .nav-btn.is-active {
+  color: rgba(0, 0, 0, 0.92);
+  border-color: rgba(234, 208, 122, 0.45);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+}
+
+.dashboard .nav-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.18);
+}
+
+.dashboard .content {
+  padding: clamp(16px, 2.6vw, 28px);
+  overflow: auto;
+  scrollbar-gutter: stable;
+  background:
+    radial-gradient(900px 480px at 90% 0%, rgba(111, 94, 35, 0.14), transparent 55%),
+    radial-gradient(800px 540px at 20% 12%, rgba(234, 208, 122, 0.10), transparent 58%),
+    linear-gradient(180deg, rgba(11, 11, 11, 0.30), rgba(11, 11, 11, 0.08));
+}
+
+.dashboard .topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.dashboard .page-title {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  margin: 0 0 4px;
+}
+
+.dashboard .page-subtitle {
+  margin: 0;
+  color: var(--muted);
+}
+
+.dashboard .accent {
+  color: rgba(234, 208, 122, 0.95);
+  font-weight: 600;
+}
+
+.dashboard .topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dashboard .action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(234, 208, 122, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 250, 235, 0.90);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: transform 130ms ease, background 130ms ease, border-color 130ms ease,
+    box-shadow 130ms ease;
+}
+
+.dashboard .action:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.08);
+  border-color: rgba(234, 208, 122, 0.28);
+}
+
+.dashboard .action--primary {
+  color: rgba(0, 0, 0, 0.92);
+  border-color: rgba(234, 208, 122, 0.55);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+}
+
+.dashboard .action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.18);
+}
+
+.dashboard .pane {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.dashboard .card {
+  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
+  border: 1px solid rgba(234, 208, 122, 0.14);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.42);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard .card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: radial-gradient(600px 140px at 15% 0%, rgba(195, 160, 51, 0.18), transparent 60%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.dashboard .card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard .card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dashboard .card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.dashboard .card-link {
+  color: rgba(234, 208, 122, 0.92);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.dashboard .card-link:hover {
+  text-decoration: underline;
+}
+
+.dashboard .pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(234, 208, 122, 0.16);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 250, 235, 0.86);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.2px;
+  text-transform: capitalize;
+}
+
+.dashboard .pill--muted {
+  color: rgba(255, 250, 235, 0.70);
+  border-color: rgba(234, 208, 122, 0.10);
+}
+
+.dashboard .pill--type {
+  border-color: rgba(195, 160, 51, 0.22);
+  background: rgba(195, 160, 51, 0.10);
+}
+
+.dashboard .pill--deposit {
+  border-color: rgba(234, 208, 122, 0.26);
+  background: rgba(234, 208, 122, 0.12);
+}
+
+.dashboard .pill--withdraw {
+  border-color: rgba(111, 94, 35, 0.35);
+  background: rgba(111, 94, 35, 0.20);
+}
+
+.dashboard .card--hero {
+  padding: 20px;
+}
+
+.dashboard .balance {
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashboard .balance-label {
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.dashboard .balance-amount {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  font-size: clamp(2rem, 3vw, 2.4rem);
+  color: rgba(255, 250, 235, 0.96);
+}
+
+.dashboard .hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard .muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.dashboard .tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard .tx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(234, 208, 122, 0.12);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.dashboard .tx-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.dashboard .tx-date {
+  color: rgba(255, 250, 235, 0.68);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dashboard .tx-amount {
+  color: rgba(255, 250, 235, 0.92);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.dashboard .card-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 1.05rem;
+  letter-spacing: 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(234, 208, 122, 0.14);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.dashboard .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard .tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(234, 208, 122, 0.14);
+  background: rgba(0, 0, 0, 0.16);
+  color: rgba(255, 250, 235, 0.90);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 130ms ease, background 130ms ease, border-color 130ms ease;
+}
+
+.dashboard .tile:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.08);
+  border-color: rgba(234, 208, 122, 0.26);
+}
+
+.dashboard .tile--primary {
+  color: rgba(0, 0, 0, 0.92);
+  border-color: rgba(234, 208, 122, 0.55);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+}
+
+.dashboard .form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.dashboard .field {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.dashboard .field span {
+  color: rgba(255, 250, 235, 0.72);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  font-size: 0.92rem;
+}
+
+.dashboard .field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(234, 208, 122, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 250, 235, 0.92);
+  outline: none;
+  transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+}
+
+.dashboard .field input:focus {
+  border-color: rgba(234, 208, 122, 0.40);
+  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.16);
+  transform: translateY(-1px);
+}
+
+.dashboard .form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+@media (min-width: 1020px) {
+  .dashboard .pane {
+    grid-template-columns: 1.25fr 0.95fr;
+    align-items: start;
+  }
+
+  .dashboard .card--hero {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 940px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+
+  .dashboard .sidebar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-right: none;
+    border-bottom: 1px solid rgba(234, 208, 122, 0.12);
+  }
+
+  .dashboard .brand {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    margin-right: auto;
+  }
+
+  .dashboard .nav-btn {
+    width: auto;
+  }
+
+  .dashboard .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard .topbar-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard .nav-btn,
+  .dashboard .action,
+  .dashboard .tile,
+  .dashboard .field input {
+    transition: none;
+  }
+}
+
