@@ -1,0 +1,20 @@
+.deposit-page {
+  min-height: 100vh;
+  background-color: var(--black);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.deposit-title {
+  color: var(--gold-primary);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.deposit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
