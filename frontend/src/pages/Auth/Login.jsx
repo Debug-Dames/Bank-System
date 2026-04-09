@@ -35,6 +35,17 @@ export default function Login() {
       return;
     }
 
+    // Prevent obviously weak password usage at login too.
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    if (formData.password.trim().toLowerCase() === 'password') {
+      setError('Password cannot be "password".');
+      return;
+    }
+
     // Read registered user saved during registration.
     const savedUser = JSON.parse(localStorage.getItem('registeredUser'));
 

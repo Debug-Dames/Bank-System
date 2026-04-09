@@ -39,8 +39,12 @@ export default function Register() {
       return 'Please enter a valid email address.';
     }
 
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters.';
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters.';
+    }
+
+    if (password.trim().toLowerCase() === 'password') {
+      return 'Password cannot be "password". Choose a stronger password.';
     }
 
     if (password !== confirmPassword) {
@@ -134,7 +138,7 @@ export default function Register() {
               type="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Minimum 6 characters"
+              placeholder="Minimum 8 characters"
             />
           </div>
 
