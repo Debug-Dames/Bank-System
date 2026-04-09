@@ -156,7 +156,7 @@ export default function Register() {
         </form>
 
         <p className="auth-switch-text">
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account? <Link to="/">Login</Link>
         </p>
       </div>
     </div>
