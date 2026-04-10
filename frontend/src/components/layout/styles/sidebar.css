@@ -1,0 +1,194 @@
+/* ============================================================
+   Sidebar — components/layout/styles/sidebar.css
+   ============================================================ */
+
+/* ── Backdrop (mobile) ────────────────────────────────────── */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: calc(var(--z-sticky) - 1);
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* ── Sidebar shell ────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  height: calc(100vh - var(--navbar-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: var(--z-sticky);
+
+  padding: 22px 16px;
+  border-right: 1px solid var(--stroke-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  background:
+    radial-gradient(500px 280px at 40% 0%, rgba(195, 160, 51, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(11, 11, 11, 0.97), rgba(22, 22, 22, 0.97));
+
+  transform: translateX(0);
+  transition: transform var(--transition-slow);
+}
+
+/* ── Section label ────────────────────────────────────────── */
+.sidebar__section-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: var(--font-semibold);
+  color: rgba(255, 250, 235, 0.28);
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  padding: var(--space-2) 4px var(--space-3);
+  flex-shrink: 0;
+}
+
+/* ── Nav container ────────────────────────────────────────── */
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+/* ── Individual link ──────────────────────────────────────── */
+.sidebar__link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(255, 250, 235, 0.78);
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.sidebar__link:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.06);
+  border-color: rgba(234, 208, 122, 0.22);
+  color: var(--text-primary);
+}
+
+.sidebar__link:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.sidebar__link--active {
+  color: rgba(0, 0, 0, 0.92);
+  border-color: rgba(234, 208, 122, 0.45);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+  transform: none;
+}
+
+/* ── Icon wrapper — fixed size, never grows ───────────────── */
+.sidebar__link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  flex-shrink: 0;
+  opacity: 0.60;
+  transition: opacity var(--transition-fast);
+}
+
+/* Force SVG to respect the wrapper size */
+.sidebar__link-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.sidebar__link:hover .sidebar__link-icon,
+.sidebar__link--active .sidebar__link-icon {
+  opacity: 1;
+}
+
+/* ── Label text ───────────────────────────────────────────── */
+.sidebar__link-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Footer account block ─────────────────────────────────── */
+.sidebar__footer {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  padding-left: 4px;
+  border-top: 1px solid rgba(234, 208, 122, 0.10);
+  flex-shrink: 0;
+}
+
+.sidebar__account-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: var(--font-semibold);
+  color: rgba(255, 250, 235, 0.28);
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+.sidebar__account-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 940px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+    border-right: none;
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+    box-shadow: 8px 0 48px rgba(0, 0, 0, 0.75);
+  }
+}
+
+@media (min-width: 941px) {
+  .sidebar-backdrop {
+    display: none !important;
+  }
+
+  .sidebar {
+    transform: translateX(0) !important;
+  }
+}
