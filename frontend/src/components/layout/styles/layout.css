@@ -1,15 +1,38 @@
-.app-shell {
-  min-height: 100vh;
+/* ============================================================
+   AppLayout — components/layout/styles/layout.css
+   ============================================================ */
+
+.app-layout {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 32px 20px;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.main {
-  width: min(100%, 1180px);
+.app-layout__body {
+  display: flex;
+  flex: 1;
+  padding-top: var(--navbar-height);
 }
 
-.content {
-  padding: 0;
+.app-layout__main {
+  flex: 1;
+  /* Reserve space for the sidebar on desktop */
+  margin-left: var(--sidebar-width);
+  padding: clamp(16px, 2.6vw, 28px);
+  overflow: auto;
+  scrollbar-gutter: stable;
+  min-height: calc(100vh - var(--navbar-height));
+
+  background:
+    radial-gradient(900px 480px at 90% 0%, rgba(111, 94, 35, 0.14), transparent 55%),
+    radial-gradient(800px 540px at 20% 12%, rgba(234, 208, 122, 0.10), transparent 58%),
+    linear-gradient(180deg, rgba(11, 11, 11, 0.30), rgba(11, 11, 11, 0.08));
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 940px) {
+  .app-layout__main {
+    /* Sidebar is off-screen on mobile — full width */
+    margin-left: 0;
+  }
 }

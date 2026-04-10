@@ -1,0 +1,56 @@
+/* ============================================================
+   Alert — components/ui/styles/alert.css
+   ============================================================ */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  font-size: var(--text-sm);
+  font-weight: var(--font-normal);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-relaxed);
+  animation: fadeUp 0.25s ease forwards;
+}
+
+.alert__indicator {
+  width: 3px;
+  min-height: 18px;
+  align-self: stretch;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.alert__message { flex: 1; }
+
+/* ── Variants ─────────────────────────────────────────────── */
+.alert--success {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+.alert--success .alert__indicator { background: var(--color-success); }
+
+.alert--error {
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+  color: var(--color-error);
+}
+.alert--error .alert__indicator { background: var(--color-error); }
+
+.alert--warning {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+}
+.alert--warning .alert__indicator { background: var(--color-warning); }
+
+.alert--info {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info);
+}
+.alert--info .alert__indicator { background: var(--color-info); }

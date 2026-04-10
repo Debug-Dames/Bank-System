@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { depositMoney } from "../service/mockApi";
+import { depositFunds } from "../service/mockApi";
 
 // =========================
 // ASYNC THUNK (API CALL)
 // =========================
 export const depositAsync = createAsyncThunk(
   "deposit/depositAsync",
-  async (amount, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await depositMoney(amount);
+      const response = await depositFunds(payload);
       return response;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -19,31 +19,33 @@ export const depositAsync = createAsyncThunk(
 const depositSlice = createSlice({
   name: "deposit",
   initialState: {
-    loading: false,
-    status: null,
+    status: "idle",
+    error: null,
+    lastTransaction: null,
   },
-  reducers: {},
+  reducers: {
+    resetDeposit: (state) => {
+      state.status = "idle";
+      state.error = null;
+      state.lastTransaction = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(depositAsync.pending, (state) => {
-        state.loading = true;
-        state.status = null;
+        state.status = "loading";
+        state.error = null;
       })
       .addCase(depositAsync.fulfilled, (state, action) => {
-        state.loading = false;
-        state.status = {
-          type: "success",
-          message: `R ${action.payload.transaction.amount} deposited successfully`,
-        };
+        state.status = "succeeded";
+        state.lastTransaction = action.payload;
       })
       .addCase(depositAsync.rejected, (state, action) => {
-        state.loading = false;
-        state.status = {
-          type: "error",
-          message: action.payload,
-        };
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });
 
+export const { resetDeposit } = depositSlice.actions;
 export default depositSlice.reducer;
