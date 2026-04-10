@@ -1,15 +1,50 @@
-import Navbar from './Navbar';
-import Sidebar from './Sidebar';
-import { Outlet } from 'react-router-dom';
-import './styles/layout.css';
+import { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import "../layout/styles/layout.css";
 
 export default function AppLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // Close sidebar whenever the route changes
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    queueMicrotask(() => setSidebarOpen(false));
+  }, [location.pathname, sidebarOpen]);
+
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, []);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
   return (
-    <div className="layout">
-      <Sidebar />
-      <div className="main">
-        <Navbar />
-        <div className="content">{children ?? <Outlet />}</div>
+    <div className="app-layout">
+      <Navbar
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+      />
+
+      <div className="app-layout__body">
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        <main className="app-layout__main">
+          {children ?? <Outlet />}
+        </main>
       </div>
     </div>
   );

@@ -9,6 +9,8 @@ import Dashboard from '../pages/Dashboard/Dashboard';
 import Deposit from '../pages/Deposit/Deposit';
 import Withdraw from '../pages/Withdraw/Withdraw';
 import Transactions from '../pages/Transactions/Transactions';
+import Profile from '../pages/Profile/Profile';
+import Cards from '../pages/Cards/Cards';
 
 // Layout
 import AppLayout from '../components/layout/AppLayout';
@@ -22,15 +24,15 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Dashboard (Standalone) */}
-      <Route path="/dashboard" element={<Dashboard />} />
-
       {/* Protected / Main App Routes */}
       <Route element={<AppLayout />}>
 
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/cards" element={<Cards />} />
         <Route path="/deposit" element={<Deposit />} />
         <Route path="/withdraw" element={<Withdraw />} />
         <Route path="/transactions" element={<Transactions />} />
+        <Route path="/profile" element={<Profile />} />
 
       </Route>
 

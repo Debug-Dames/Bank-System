@@ -1,62 +1,45 @@
-export const mockUser = {
-  id: "u1",
-  name: "Comfort Ngwenya",
-  email: "comfort@example.com",
-  phone: "0812345678",
-  address: "123 Main Street, Cape Town"
+// Simulates backend API responses during Sprint 1.
+const MOCK_BALANCE = 5000.0;
+let currentBalance = MOCK_BALANCE;
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// --- Auth ---
+export const loginUser = async () => {
+  
 };
 
-export const mockBalance = 12500;
+export const registerUser = async () => {
+  
+};
 
-export const mockTransactions = [
-  {
-    id: "t1",
-    type: "deposit",
-    amount: 500,
-    date: "2026-04-01",
-    status: "completed"
-  },
-  {
-    id: "t2",
-    type: "withdraw",
-    amount: 200,
-    date: "2026-04-02",
-    status: "completed"
-  },
-  {
-    id: "t3",
-    type: "deposit",
-    amount: 1500,
-    date: "2026-03-18",
-    status: "completed"
-  },
-  {
-    id: "t4",
-    type: "withdraw",
-    amount: 350,
-    date: "2026-03-22",
-    status: "completed"
-  },
-  {
-    id: "t5",
-    type: "deposit",
-    amount: 800,
-    date: "2026-02-10",
-    status: "completed"
-  }
-];
+// --- Balance ---
+export const getBalance = async ({ accountId }) => {
+  await delay(500);
+  return { accountId, balance: currentBalance };
+};
 
-export const mockSavingsPlans = [
-  {
-    id: "s1",
-    name: "Emergency Fund",
-    target: 20000,
-    balance: 3500
-  },
-  {
-    id: "s2",
-    name: "Holiday",
-    target: 12000,
-    balance: 1800
-  }
-];
+// --- Deposit ---
+export const depositFunds = async ({ accountId, amount }) => {
+  
+};
+
+// --- Withdraw ---
+export const withdrawFunds = async ({ accountId, amount }) => {
+  await delay(900);
+  if (!amount || amount <= 0) throw new Error("Amount must be greater than zero");
+  if (parseFloat(amount) > currentBalance) throw new Error("Insufficient funds");
+  currentBalance -= parseFloat(amount);
+  return {
+    transactionId: `txn_${Date.now()}`,
+    type: "withdrawal",
+    amount: parseFloat(amount),
+    balanceAfter: currentBalance,
+    date: new Date().toISOString(),
+  };
+};
+
+// --- Transactions ---
+export const getTransactions = async ({ accountId }) => {
+ 
+};

@@ -1,0 +1,118 @@
+/* ============================================================
+   Input — components/ui/styles/input.css
+   ============================================================ */
+
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.form-label {
+  color: rgba(255, 250, 235, 0.72);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* ── Wrapper (prefix / suffix) ────────────────────────────── */
+.input-wrapper {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-subtle);
+  background: var(--bg-element);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--stroke-focus);
+  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.16);
+  transform: translateY(-1px);
+}
+
+.input-wrapper--error {
+  border-color: var(--color-error-border);
+}
+.input-wrapper--error:focus-within {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 4px var(--color-error-bg);
+}
+
+.input-prefix,
+.input-suffix {
+  padding: 0 12px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: rgba(234, 208, 122, 0.80);
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-right: 1px solid var(--stroke-subtle);
+}
+
+.input-suffix { border-right: none; border-left: 1px solid var(--stroke-subtle); }
+
+/* ── Field ────────────────────────────────────────────────── */
+.form-input {
+  flex: 1;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-subtle);
+  background: var(--bg-element);
+  color: rgba(255, 250, 235, 0.92);
+  outline: none;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* When inside a wrapper, strip the standalone styles */
+.input-wrapper .form-input {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 10px 12px;
+}
+
+.form-input:focus {
+  border-color: var(--stroke-focus);
+  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.16);
+  transform: translateY(-1px);
+}
+
+.input-wrapper .form-input:focus {
+  box-shadow: none;
+  transform: none;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 250, 235, 0.28);
+}
+
+.form-input:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+}
+
+/* ── Helper ───────────────────────────────────────────────── */
+.form-error {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  letter-spacing: var(--tracking-normal);
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
