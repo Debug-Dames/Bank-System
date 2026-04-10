@@ -1,5 +1,8 @@
 // Simulates backend API responses (mocked, in-memory).
 
+// store transactions
+let transactions = [];
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Seeded transaction history so Transactions isn't empty on first load.
@@ -70,35 +73,60 @@ function recordTx(tx) {
 
 // --- Auth ---
 export const loginUser = async () => {
-  await delay(300);
-  return { ok: true };
+  await delay(500);
+
+  return {
+    token: "mock-token",
+    user: {
+      id: "u1",
+      name: "User",
+      email: "user@mail.com",
+    },
+  };
 };
 
 export const registerUser = async () => {
-  await delay(300);
-  return { ok: true };
+  await delay(700);
+
+  return {
+    success: true,
+    message: "User registered successfully",
+  };
 };
 
 // --- Balance ---
 export const getBalance = async ({ accountId }) => {
   await delay(500);
-  return { accountId, balance: currentBalance };
+
+  return {
+    accountId,
+    balance: currentBalance,
+  };
 };
 
 // --- Deposit ---
 export const depositFunds = async ({ accountId, amount }) => {
-  await delay(900);
-  const n = Number(amount);
-  if (!Number.isFinite(n) || n <= 0) throw new Error("Amount must be greater than zero");
-  currentBalance += n;
-  return recordTx({
+  await delay(800);
+
+  const numericAmount = parseFloat(amount);
+
+  if (!numericAmount || numericAmount <= 0) {
+    throw new Error("Amount must be greater than zero");
+  }
+
+  currentBalance += numericAmount;
+
+  const transaction = {
     transactionId: `txn_${Date.now()}`,
     type: "deposit",
-    amount: n,
+    amount: numericAmount,
     balanceAfter: currentBalance,
     date: new Date().toISOString(),
-    accountId,
-  });
+  };
+
+  transactions.unshift(transaction);
+
+  return transaction;
 };
 
 // --- Withdraw ---
@@ -190,6 +218,30 @@ export const payBeneficiary = async ({
     beneficiaryAccount: String(beneficiaryAccount || "").trim(),
     reference: String(reference || "").trim(),
   });
+
+  const numericAmount = parseFloat(amount);
+
+  if (!numericAmount || numericAmount <= 0) {
+    throw new Error("Amount must be greater than zero");
+  }
+
+  if (numericAmount > currentBalance) {
+    throw new Error("Insufficient funds");
+  }
+
+  currentBalance -= numericAmount;
+
+  const transaction = {
+    transactionId: `txn_${Date.now()}`,
+    type: "withdrawal",
+    amount: numericAmount,
+    balanceAfter: currentBalance,
+    date: new Date().toISOString(),
+  };
+
+  transactions.unshift(transaction);
+
+  return transaction;
 };
 
 // --- Transactions ---
@@ -201,4 +253,8 @@ export const getTransactions = async ({ accountId }) => {
     transactions: txHistory.map((tx) => ({ ...tx })).sort((a, b) => new Date(b.date) - new Date(a.date)),
   };
 };
+
+  await delay(500);
+
+
 

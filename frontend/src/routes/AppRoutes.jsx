@@ -21,6 +21,7 @@ export default function AppRoutes() {
     <Routes>
 
       {/* Auth Routes (No Layout) */}
+      <Route path="/" element={<Navigate to="/deposit" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
