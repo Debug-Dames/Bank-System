@@ -1,0 +1,128 @@
+.transact-page {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.transact-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.transact-title {
+  margin: 0 0 6px;
+}
+
+.transact-subtitle {
+  margin: 0;
+}
+
+.transact-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.transact-balance__label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: var(--font-semibold);
+}
+
+.transact-balance__value {
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  letter-spacing: 0.3px;
+}
+
+.transact-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.transact-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--stroke-subtle);
+  background: var(--bg-element);
+  color: rgba(255, 250, 235, 0.88);
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--tracking-normal);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.transact-tab:hover {
+  background: var(--accent-subtle-hover);
+  border-color: rgba(234, 208, 122, 0.28);
+}
+
+.transact-tab.is-active {
+  color: rgba(0, 0, 0, 0.92);
+  border-color: rgba(234, 208, 122, 0.55);
+  background: var(--gradient-gold);
+  box-shadow: var(--shadow-action);
+}
+
+.transact-card {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.transact-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.transact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.transact-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.transact-token {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(234, 208, 122, 0.24);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.transact-token__label {
+  font-size: var(--text-xs);
+  color: rgba(255, 250, 235, 0.55);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: var(--font-semibold);
+}
+
+.transact-token__value {
+  font-family: var(--font-mono);
+  letter-spacing: 2px;
+}
+
+@media (max-width: 940px) {
+  .transact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

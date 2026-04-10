@@ -1,6 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { getTransactions } from "../service/mockApi";
 
-// Temporary local mock data (replaces removed exports from mockApi)
+// Temporary local mock data
 const mockUser = {
   id: "user_001",
   name: "Test User",
@@ -13,8 +14,6 @@ const mockAccount = {
 
 const mockBalance = 5000;
 
-const mockTransactions = [];
-
 const mockSavingsPlans = [];
 
 const mockCards = [
@@ -26,10 +25,7 @@ const mockCards = [
     number: "5423123412341234",
     cvv: "407",
     expiry: "08/28",
-    limits: {
-      online: 5000,
-      withdrawals: 2000,
-    },
+    limits: { online: 5000, withdrawals: 2000 },
     blocked: false,
   },
   {
@@ -40,29 +36,53 @@ const mockCards = [
     number: "5423567856785678",
     cvv: "912",
     expiry: "08/28",
-    limits: {
-      online: 8000,
-      withdrawals: 0,
-    },
+    limits: { online: 8000, withdrawals: 0 },
     blocked: false,
   },
 ];
 
-const initialState = {
-  user: mockUser,
-  account: mockAccount,
-  balance: mockBalance,
-  transactions: mockTransactions,
-  savingsPlans: mockSavingsPlans,
-  cards: mockCards,
-};
+export const fetchTransactions = createAsyncThunk(
+  "auth/fetchTransactions",
+  async ({ accountId }, { rejectWithValue }) => {
+    try {
+      const data = await getTransactions({ accountId });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error?.message || "Unable to load transactions");
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
-  initialState,
+  initialState: {
+    user: mockUser,
+    account: mockAccount,
+    balance: mockBalance,
+    cards: mockCards,
+    savingsPlans: mockSavingsPlans,
+    transactions: {
+      status: "idle",
+      error: null,
+      items: [],
+    },
+  },
   reducers: {
     updateUser: (state, action) => {
-      state.user = { ...state.user, ...action.payload };
+      state.user = { ...(state.user || {}), ...(action.payload || {}) };
+    },
+
+    setBalance: (state, action) => {
+      const n = Number(action.payload);
+      if (!Number.isFinite(n) || n < 0) return;
+      state.balance = n;
+    },
+
+    prependTransaction: (state, action) => {
+      const tx = action.payload;
+      if (!tx) return;
+      if (!state.transactions?.items) state.transactions = { status: "idle", error: null, items: [] };
+      state.transactions.items.unshift(tx);
     },
 
     updateCardLimits: (state, action) => {
@@ -86,53 +106,41 @@ const authSlice = createSlice({
       const card = state.cards?.find((c) => c.id === cardId);
       if (!card) return;
       card.blocked = Boolean(blocked);
-      card.status = card.blocked ? "Blocked" : card.kind === "virtual" ? "Online" : "Active";
+      card.status = card.blocked
+        ? "Blocked"
+        : card.kind === "virtual"
+          ? "Online"
+          : "Active";
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTransactions.pending, (state) => {
+        state.transactions.status = "loading";
+        state.transactions.error = null;
+      })
+      .addCase(fetchTransactions.fulfilled, (state, action) => {
+        state.transactions.status = "succeeded";
+        const items = action.payload?.transactions || [];
+        state.transactions.items = items;
 
-    addSavingsPlan: (state, action) => {
-      const payload = action.payload || {};
-      const name = String(payload.name || "").trim();
-      const target = Number(payload.target || 0);
-
-      if (!name || !Number.isFinite(target) || target <= 0) return;
-
-      state.savingsPlans.unshift({
-        id: `s${Date.now()}`,
-        name,
-        target,
-        balance: 0,
+        const latestBalance = Number(items?.[0]?.balanceAfter);
+        if (Number.isFinite(latestBalance) && latestBalance >= 0) {
+          state.balance = latestBalance;
+        }
+      })
+      .addCase(fetchTransactions.rejected, (state, action) => {
+        state.transactions.status = "failed";
+        state.transactions.error = action.payload || "Unable to load transactions";
       });
-    },
-
-    transferToSavingsPlan: (state, action) => {
-      const { planId, amount } = action.payload || {};
-      const plan = state.savingsPlans.find((p) => p.id === planId);
-      const n = Number(amount || 0);
-
-      if (!plan || !Number.isFinite(n) || n <= 0) return;
-      if (state.balance < n) return;
-
-      state.balance -= n;
-      plan.balance += n;
-
-      state.transactions.unshift({
-        id: `t${Date.now()}`,
-        type: "transfer",
-        amount: n,
-        date: new Date().toISOString().slice(0, 10),
-        status: "completed",
-        note: `Transfer to savings: ${plan.name}`,
-      });
-    },
   },
 });
 
 export const {
   updateUser,
-  addSavingsPlan,
-  transferToSavingsPlan,
+  setBalance,
+  prependTransaction,
   updateCardLimits,
   setCardBlocked,
 } = authSlice.actions;
-
 export default authSlice.reducer;

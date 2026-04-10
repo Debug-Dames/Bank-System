@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation, Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import "../layout/styles/layout.css";
 
-export default function AppLayout({ children }) {
+export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -43,7 +43,7 @@ export default function AppLayout({ children }) {
         />
 
         <main className="app-layout__main">
-          {children ?? <Outlet />}
+          <Outlet />
         </main>
       </div>
     </div>

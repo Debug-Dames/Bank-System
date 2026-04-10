@@ -36,6 +36,20 @@ const Icons = {
       <line x1="5" y1="10.5" x2="8.5" y2="10.5" />
     </svg>
   ),
+  Transact: (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 10.5l4.2-7.5h2.1L6 10.5h2.8L5.6 15H7l6-9H9.6L12 1" />
+    </svg>
+  ),
   Deposit: (
     <svg
       width="16"
@@ -104,6 +118,7 @@ const Icons = {
 const NAV_LINKS = [
   { to: "/dashboard", label: "Dashboard", icon: Icons.Dashboard },
   { to: "/cards", label: "Cards", icon: Icons.Cards },
+  { to: "/transact", label: "Transact", icon: Icons.Transact },
   { to: "/deposit", label: "Deposit", icon: Icons.Deposit },
   { to: "/withdraw", label: "Withdraw", icon: Icons.Withdraw },
   { to: "/transactions", label: "Transactions", icon: Icons.Transactions },
@@ -149,4 +164,3 @@ export default function Sidebar({ open, onClose }) {
     </>
   );
 }
-

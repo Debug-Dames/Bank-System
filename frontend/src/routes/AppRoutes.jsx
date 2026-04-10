@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Auth pages
 import Login from '../pages/Auth/Login';
@@ -11,6 +11,7 @@ import Withdraw from '../pages/Withdraw/Withdraw';
 import Transactions from '../pages/Transactions/Transactions';
 import Profile from '../pages/Profile/Profile';
 import Cards from '../pages/Cards/Cards';
+import Transact from "../pages/Transact/Transact";
 
 // Layout
 import AppLayout from '../components/layout/AppLayout';
@@ -20,20 +21,19 @@ export default function AppRoutes() {
     <Routes>
 
       {/* Auth Routes (No Layout) */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       {/* Protected / Main App Routes */}
-      <Route element={<AppLayout />}>
-
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/cards" element={<Cards />} />
-        <Route path="/deposit" element={<Deposit />} />
-        <Route path="/withdraw" element={<Withdraw />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/profile" element={<Profile />} />
-
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="cards" element={<Cards />} />
+        <Route path="transact" element={<Transact />} />
+        <Route path="deposit" element={<Deposit />} />
+        <Route path="withdraw" element={<Withdraw />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       {/* Fallback Route */}

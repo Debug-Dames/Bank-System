@@ -5,19 +5,8 @@ import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
 import "./dashboard.css";
 
-function maskCardNumber(number) {
-  const digits = String(number ?? "").replace(/\s+/g, "");
-  const last4 = digits.slice(-4).padStart(4, "•");
-  return `•••• •••• •••• ${last4}`;
-}
-
 export default function Dashboard() {
-  const { user = {}, balance = 0, transactions = [], cards = [] } = useSelector(
-    (state) => state.auth || {}
-  );
-
-  const safeTransactions = Array.isArray(transactions) ? transactions : [];
-  const safeCards = Array.isArray(cards) ? cards : [];
+  const { user = {}, balance = 0 } = useSelector((state) => state.auth || {});
 
   const formatMoney = (amount) => {
     const n = Number(amount ?? 0);
@@ -28,7 +17,7 @@ export default function Dashboard() {
     <div className="dashboard-view">
       <header className="dashboard-view__header">
         <div>
-          <h1 className="dashboard-view__title">Dashboard</h1>
+          <h1 className="dashboard-view__title">NovaBank</h1>
           <p className="dashboard-view__subtitle">
             Welcome back, <span className="accent">{user?.name || "User"}</span>
           </p>
@@ -64,8 +53,6 @@ export default function Dashboard() {
             </Link>
           </div>
         </section>
-
-       
 
         
 

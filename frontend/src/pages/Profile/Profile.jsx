@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../../features/authSlice";
 
@@ -15,6 +16,7 @@ export default function Profile() {
     () => ({
       name: user?.name ?? "",
       email: user?.email ?? "",
+      pin: "",
     }),
     [user?.email, user?.name]
   );
@@ -77,17 +79,17 @@ export default function Profile() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="Pin" className="form-label">
+            <label htmlFor="pin" className="form-label">
               Reset Pin
             </label>
             <input
               id="pin"
               className="form-input"
               name="pin"
-              type="pim"
-              value={form.pin}
+              type="password"
+              value={form.pin ?? ""}
               onChange={(e) => setForm((prev) => ({ ...prev, pin: e.target.value }))}
-              autoComplete="pin"
+              autoComplete="new-password"
             />
           </div>
           <div className="profile-view__actions">
@@ -107,4 +109,3 @@ export default function Profile() {
     </div>
   );
 }
-

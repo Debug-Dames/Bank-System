@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCardBlocked, updateCardLimits } from "../../features/authSlice";
 
@@ -8,34 +8,31 @@ import "./cards.css";
 
 function formatCardNumber(number) {
   const digits = String(number ?? "").replace(/\s+/g, "");
-  if (digits.length < 12) return digits || "•••• •••• •••• ••••";
+  if (digits.length < 12) return digits || "\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022";
   return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
 }
 
 function maskCardNumber(number) {
   const digits = String(number ?? "").replace(/\s+/g, "");
-  const last4 = digits.slice(-4).padStart(4, "•");
-  return `•••• •••• •••• ${last4}`;
+  const last4 = digits.slice(-4).padStart(4, "\u2022");
+  return `\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ${last4}`;
 }
 
-function maskCvv(cvv) {
-  return "•••";
+function maskCvv() {
+  return "\u2022\u2022\u2022";
 }
 
 export default function Cards() {
   const dispatch = useDispatch();
   const cards = useSelector((state) => state.auth?.cards) || [];
   const userName = useSelector((state) => state.auth?.user?.name) || "User";
-  const accountId = useSelector((state) => state.auth?.account?.id) || "—";
+  const accountId = useSelector((state) => state.auth?.account?.id) || "\u2014";
 
-  const normalizedCards = useMemo(
-    () =>
-      (Array.isArray(cards) ? cards : []).map((c) => ({
-        ...c,
-        limits: c?.limits || { online: 0, withdrawals: 0 },
-      })),
-    [cards]
-  );
+  const safeCards = Array.isArray(cards) ? cards : [];
+  const normalizedCards = safeCards.map((card) => ({
+    ...card,
+    limits: card?.limits || { online: 0, withdrawals: 0 },
+  }));
 
   return (
     <div className="cards-view">
@@ -156,7 +153,7 @@ function CardItem({ card, userName, accountId, onUpdateLimits, onSetBlocked }) {
                 <div className="cards-view__field">
                   <span className="cards-view__field-label">CVV</span>
                   <span className="cards-view__field-value cards-view__mono">
-                    {showCvv ? String(card.cvv ?? "—") : maskCvv(card.cvv)}
+                    {showCvv ? String(card.cvv ?? "\u2014") : maskCvv()}
                   </span>
                 </div>
               </div>
