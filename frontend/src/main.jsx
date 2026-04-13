@@ -6,6 +6,7 @@ import { store } from './app/store.js'
 import './styles/variables.css'
 import './styles/global.css'
 
+
 createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <App />

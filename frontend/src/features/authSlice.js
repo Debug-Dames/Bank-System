@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getTransactions } from "../service/mockApi";
+import { depositAsync } from "./depositSlice";
+import { withdraw } from "./withdrawSlice";
 
 // Temporary local mock data
 const mockUser = {
@@ -12,7 +14,7 @@ const mockAccount = {
   id: "OB — 0041 — 2025",
 };
 
-const mockBalance = 5000;
+const mockBalance = 7100;
 
 const mockSavingsPlans = [];
 
@@ -58,7 +60,7 @@ const authSlice = createSlice({
   initialState: {
     user: mockUser,
     account: mockAccount,
-    balance: mockBalance,
+    balance: 0,
     cards: mockCards,
     savingsPlans: mockSavingsPlans,
     transactions: {
@@ -76,6 +78,16 @@ const authSlice = createSlice({
       const n = Number(action.payload);
       if (!Number.isFinite(n) || n < 0) return;
       state.balance = n;
+    },
+
+    clearTransactions: (state) => {
+      if (!state.transactions) {
+        state.transactions = { status: "succeeded", error: null, items: [] };
+        return;
+      }
+      state.transactions.items = [];
+      state.transactions.error = null;
+      if (state.transactions.status === "idle") state.transactions.status = "succeeded";
     },
 
     prependTransaction: (state, action) => {
@@ -132,6 +144,38 @@ const authSlice = createSlice({
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.transactions.status = "failed";
         state.transactions.error = action.payload || "Unable to load transactions";
+      })
+      .addCase(depositAsync.fulfilled, (state, action) => {
+        const transaction = action.payload;
+        if (!transaction) return;
+
+        if (!state.transactions?.items) {
+          state.transactions = { status: "idle", error: null, items: [] };
+        }
+
+        state.transactions.items = [
+          transaction,
+          ...state.transactions.items.filter(
+            (item) => item.transactionId !== transaction.transactionId
+          ),
+        ];
+        state.balance = transaction.balanceAfter;
+      })
+      .addCase(withdraw.fulfilled, (state, action) => {
+        const transaction = action.payload;
+        if (!transaction) return;
+
+        if (!state.transactions?.items) {
+          state.transactions = { status: "idle", error: null, items: [] };
+        }
+
+        state.transactions.items = [
+          transaction,
+          ...state.transactions.items.filter(
+            (item) => item.transactionId !== transaction.transactionId
+          ),
+        ];
+        state.balance = transaction.balanceAfter;
       });
   },
 });
@@ -139,6 +183,7 @@ const authSlice = createSlice({
 export const {
   updateUser,
   setBalance,
+  clearTransactions,
   prependTransaction,
   updateCardLimits,
   setCardBlocked,

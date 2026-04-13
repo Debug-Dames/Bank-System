@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { prependTransaction, setBalance } from "../../features/authSlice";
 import {
   buyAirtime,
   buyData,
   buyElectricity,
   payBeneficiary,
+  sendCash,
 } from "../../service/mockApi";
 
 import "../../components/ui/styles/alert.css";
@@ -18,7 +20,8 @@ const TABS = [
   { id: "airtime", label: "Airtime" },
   { id: "data", label: "Data" },
   { id: "electricity", label: "Electricity" },
-  { id: "beneficiary", label: "Beneficiary" },
+  { id: "beneficiary", label: "Transfer" },
+  { id: "sendcash", label: "Send Cash" },
 ];
 
 const NETWORKS = ["Vodacom", "MTN", "Cell C", "Telkom", "Rain"];
@@ -26,10 +29,14 @@ const DATA_BUNDLES = ["500MB", "1GB", "2GB", "5GB", "10GB"];
 
 export default function Transact() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const accountId = useSelector((state) => state.auth?.account?.id) || "acc_001";
   const balance = useSelector((state) => state.auth?.balance ?? 0);
 
-  const [tab, setTab] = useState("airtime");
+  const tab = useMemo(() => {
+    const requested = String(searchParams.get("tab") || "").toLowerCase();
+    return TABS.some((t) => t.id === requested) ? requested : "airtime";
+  }, [searchParams]);
   const [status, setStatus] = useState("idle"); // idle | loading | succeeded | failed
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -60,21 +67,29 @@ export default function Transact() {
     amount: "",
   });
 
+  const [cashSend, setCashSend] = useState({
+    recipientName: "",
+    phone: "",
+    note: "",
+    amount: "",
+    pin: "",
+  });
+
   const formattedBalance = useMemo(
     () => Number(balance ?? 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 }),
     [balance]
   );
 
-  const resetFeedback = () => {
+  const resetFeedback = useCallback(() => {
     setStatus("idle");
     setError("");
     setResult(null);
-  };
+  }, []);
 
-  const commitTx = (tx) => {
+  const commitTx = useCallback((tx) => {
     dispatch(setBalance(tx.balanceAfter));
     dispatch(prependTransaction(tx));
-  };
+  }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,7 +119,7 @@ export default function Transact() {
           meterNumber: electricity.meterNumber,
           amount: electricity.amount,
         });
-      } else {
+      } else if (tab === "beneficiary") {
         tx = await payBeneficiary({
           accountId,
           beneficiaryName: beneficiary.beneficiaryName,
@@ -112,6 +127,15 @@ export default function Transact() {
           beneficiaryAccount: beneficiary.beneficiaryAccount,
           reference: beneficiary.reference,
           amount: beneficiary.amount,
+        });
+      } else {
+        tx = await sendCash({
+          accountId,
+          recipientName: cashSend.recipientName,
+          phone: cashSend.phone,
+          reference: cashSend.note,
+          amount: cashSend.amount,
+          pin: cashSend.pin,
         });
       }
 
@@ -130,7 +154,7 @@ export default function Transact() {
         <div>
           <h1 className="transact-title">Transact</h1>
           <p className="transact-subtitle text-muted">
-            Buy airtime, data, electricity, or pay a beneficiary.
+            Buy airtime, data, electricity, transfer money, or send cash.
           </p>
         </div>
 
@@ -150,7 +174,11 @@ export default function Transact() {
             aria-selected={tab === t.id}
             onClick={() => {
               resetFeedback();
-              setTab(t.id);
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.set("tab", t.id);
+                return next;
+              });
             }}
           >
             {t.label}
@@ -453,6 +481,149 @@ export default function Transact() {
             </>
           )}
 
+          {tab === "sendcash" && (
+            <>
+              <div className="transact-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cashRecipient">
+                    Recipient name
+                  </label>
+                  <input
+                    id="cashRecipient"
+                    className="form-input"
+                    value={cashSend.recipientName}
+                    onChange={(e) =>
+                      setCashSend((p) => ({ ...p, recipientName: e.target.value }))
+                    }
+                    placeholder="e.g. Thando"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cashPhone">
+                    Phone number
+                  </label>
+                  <input
+                    id="cashPhone"
+                    className="form-input"
+                    value={cashSend.phone}
+                    onChange={(e) =>
+                      setCashSend((p) => ({ ...p, phone: e.target.value }))
+                    }
+                    placeholder="e.g. 071 234 5678"
+                    inputMode="tel"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="cashNote">
+                  Note (optional)
+                </label>
+                <input
+                  id="cashNote"
+                  className="form-input"
+                  value={cashSend.note}
+                  onChange={(e) =>
+                    setCashSend((p) => ({ ...p, note: e.target.value }))
+                  }
+                  placeholder="e.g. Taxi"
+                />
+              </div>
+
+              <div className="transact-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cashAmount">
+                    Amount (ZAR)
+                  </label>
+                  <input
+                    id="cashAmount"
+                    className="form-input"
+                    value={cashSend.amount}
+                    onChange={(e) =>
+                      setCashSend((p) => ({ ...p, amount: e.target.value }))
+                    }
+                    placeholder="e.g. 250"
+                    inputMode="decimal"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cashPin">
+                    Secret PIN
+                  </label>
+                  <input
+                    id="cashPin"
+                    className="form-input"
+                    type="password"
+                    value={cashSend.pin}
+                    onChange={(e) =>
+                      setCashSend((p) => ({
+                        ...p,
+                        pin: e.target.value.replace(/[^\d]/g, "").slice(0, 6),
+                      }))
+                    }
+                    placeholder="4–6 digits"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              </div>
+
+              {status === "succeeded" &&
+                result?.type === "sendcash" &&
+                result?.cashCode && (
+                  <div className="transact-token" aria-live="polite">
+                    <span className="transact-token__label">Cash send complete</span>
+                    <span className="transact-token__value">{result.cashCode}</span>
+                    <div className="text-muted">
+                      Ref: <strong>{result.referenceNumber}</strong> · Expires:{" "}
+                      <strong>
+                        {new Date(result.expiresAt).toLocaleString("en-ZA")}
+                      </strong>
+                    </div>
+                    <div className="transact-actions" style={{ justifyContent: "flex-start" }}>
+                      <button
+                        type="button"
+                        className="btn btn--outline btn--sm"
+                        onClick={() => {
+                          const amountText = Number(result.amount ?? 0).toLocaleString("en-ZA", {
+                            minimumFractionDigits: 2,
+                          });
+                          const expiryText = new Date(result.expiresAt).toLocaleString("en-ZA");
+                          const message =
+                            `NovaBank Cash Send\n` +
+                            `Amount: R ${amountText}\n` +
+                            `Cash code: ${result.cashCode}\n` +
+                            `Reference: ${result.referenceNumber}\n` +
+                            `Expiry: ${expiryText}`;
+
+                          const sharePayload = { title: "NovaBank Cash Send", text: message };
+
+                          if (navigator.share) {
+                            navigator.share(sharePayload).catch(() => {});
+                            return;
+                          }
+
+                          if (navigator.clipboard?.writeText) {
+                            navigator.clipboard
+                              .writeText(message)
+                              .then(() => window.alert("Cash send details copied. Send it to the recipient."))
+                              .catch(() => window.prompt("Copy and send to recipient:", message));
+                            return;
+                          }
+
+                          window.prompt("Copy and send to recipient:", message);
+                        }}
+                      >
+                        Send to recipient
+                      </button>
+                    </div>
+                  </div>
+                )}
+            </>
+          )}
+
           <div className="transact-actions">
             <button
               className="btn btn--primary"
@@ -475,4 +646,3 @@ export default function Transact() {
     </div>
   );
 }
-
