@@ -13,6 +13,7 @@ import './styles/input.css';
  */
 export default function Input({
   label,
+  name,
   placeholder,
   prefix,
   suffix,
@@ -58,6 +59,7 @@ export default function Input({
           disabled={disabled}
           value={value}
           onChange={onChange}
+          name={name}
         />
       )}
 

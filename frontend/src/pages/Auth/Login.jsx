@@ -2,20 +2,21 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './auth.css';
 
+import Button from "../../components/ui/Button";
+import Alert from "../../components/ui/Alert";
+
 export default function Login() {
   const navigate = useNavigate();
 
-  // Keep login form fields together for simpler state updates.
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    username: '',
+    pin: '',
   });
 
-  // Feedback messages shown below the subtitle.
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Update whichever input changed by using its "name" attribute.
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
@@ -28,46 +29,34 @@ export default function Login() {
     event.preventDefault();
     setError('');
     setSuccess('');
+    setLoading(true);
 
-    // Basic required field check.
-    if (!formData.email || !formData.password) {
-      setError('Please enter both email and password.');
+    if (!formData.username || !formData.pin) {
+      setError('Please enter both username and PIN.');
+      setLoading(false);
       return;
     }
 
-    // Prevent obviously weak password usage at login too.
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
-    if (formData.password.trim().toLowerCase() === 'password') {
-      setError('Password cannot be "password".');
-      return;
-    }
-
-    // Read registered user saved during registration.
     const savedUser = JSON.parse(localStorage.getItem('registeredUser'));
 
     if (!savedUser) {
       setError('No registered account found. Please register first.');
+      setLoading(false);
       return;
     }
 
-    // Compare entered credentials with stored credentials.
-    const emailMatches = formData.email === savedUser.email;
-    const passwordMatches = formData.password === savedUser.password;
+    const usernameMatches = formData.username === savedUser.email;
+    const pinMatches = formData.pin === savedUser.password;
 
-    if (!emailMatches || !passwordMatches) {
-      setError('Invalid email or password.');
+    if (!usernameMatches || !pinMatches) {
+      setError('Invalid username or PIN.');
+      setLoading(false);
       return;
     }
 
-    // Save the active user session for later features.
     localStorage.setItem('currentUser', JSON.stringify(savedUser));
-    setSuccess('Login successful. Redirecting to dashboard...');
+    setSuccess('Login successful. Redirecting...');
 
-    // Move to dashboard after a short delay so user sees success message.
     setTimeout(() => {
       navigate('/dashboard');
     }, 1000);
@@ -75,46 +64,63 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to access your account.</p>
+      <div className="auth-shell auth-shell--compact">
+        <div className="auth-intro">
+          <img
+            src="/novaBank-logo.jpg"
+            alt="Nova Bank"
+            className="auth-logo"
+          />
+          <h1 className="auth-page-title">Welcome Back</h1>
+          <p className="auth-page-subtitle">Sign in to continue to your account.</p>
+        </div>
 
-        {error && <p className="auth-message auth-message-error">{error}</p>}
-        {success && <p className="auth-message auth-message-success">{success}</p>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-            />
+        <section className="auth-panel">
+          <div className="auth-panel__head">
+            <h2 className="auth-panel__title">Login Details</h2>
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-            />
-          </div>
+          {error && <Alert variant="error">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
 
-          <button type="submit" className="auth-button">
-            Login
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="auth-field">
+              <label htmlFor="username">Email</label>
+              <input
+                id="username"
+                name="username"
+                type="email"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="test@bank.com"
+                autoComplete="email"
+              />
+            </div>
 
-        <p className="auth-switch-text">
-          Don&apos;t have an account? <Link to="/register">Register</Link>
-        </p>
+            <div className="auth-field">
+              <label htmlFor="pin">PIN</label>
+              <input
+                id="pin"
+                name="pin"
+                type="password"
+                value={formData.pin}
+                onChange={handleChange}
+                placeholder="Enter your PIN"
+                autoComplete="current-password"
+              />
+            </div>
+
+            <div className="auth-actions">
+              <Button type="submit" size="lg" loading={loading}>
+                Sign In
+              </Button>
+            </div>
+          </form>
+
+          <p className="auth-switch-text">
+            Don&apos;t have an account? <Link to="/register">Register</Link>
+          </p>
+        </section>
       </div>
     </div>
   );

@@ -2,23 +2,26 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './auth.css';
 
+import Button from "../../components/ui/Button";
+import Alert from "../../components/ui/Alert";
+
 export default function Register() {
   const navigate = useNavigate();
 
-  // Keep all input values in one state object for easier updates.
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    idNumber: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
-  // Store feedback messages so the user understands what happened.
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Generic input handler: update only the field that changed.
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
@@ -27,11 +30,26 @@ export default function Register() {
     }));
   };
 
-  // Basic front-end validation before "submitting" registration.
   const validateForm = () => {
-    const { firstName, lastName, email, password, confirmPassword } = formData;
+    const {
+      firstName,
+      lastName,
+      idNumber,
+      phone,
+      email,
+      password,
+      confirmPassword
+    } = formData;
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    if (
+      !firstName ||
+      !lastName ||
+      !idNumber ||
+      !phone ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
       return 'Please fill in all fields.';
     }
 
@@ -39,12 +57,16 @@ export default function Register() {
       return 'Please enter a valid email address.';
     }
 
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters.';
+    if (idNumber.length < 5) {
+      return 'Please enter a valid ID number.';
     }
 
-    if (password.trim().toLowerCase() === 'password') {
-      return 'Password cannot be "password". Choose a stronger password.';
+    if (phone.length < 10) {
+      return 'Please enter a valid phone number.';
+    }
+
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters.';
     }
 
     if (password !== confirmPassword) {
@@ -56,29 +78,30 @@ export default function Register() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    // Reset previous messages each time user submits.
     setError('');
     setSuccess('');
+    setLoading(true);
 
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
+      setLoading(false);
       return;
     }
 
-    // For now we save a mock user locally (no backend yet).
     const registeredUser = {
       firstName: formData.firstName,
       lastName: formData.lastName,
+      idNumber: formData.idNumber,
+      phone: formData.phone,
       email: formData.email,
       password: formData.password,
     };
+
     localStorage.setItem('registeredUser', JSON.stringify(registeredUser));
 
-    setSuccess('Registration successful. Redirecting to login...');
+    setSuccess('Registration successful. Redirecting...');
 
-    // Small delay so user can read the success message, then navigate.
     setTimeout(() => {
       navigate('/');
     }, 1000);
@@ -86,82 +109,129 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Fill in your details to register.</p>
+      <div className="auth-shell">
+        <div className="auth-intro">
+          <img
+            src="/novaBank-logo.jpg"
+            alt="Nova Bank"
+            className="auth-logo"
+          />
+          <h1 className="auth-page-title">Create Account</h1>
+          <p className="auth-page-subtitle">Fill in your details to open your banking profile.</p>
+        </div>
 
-        {error && <p className="auth-message auth-message-error">{error}</p>}
-        {success && <p className="auth-message auth-message-success">{success}</p>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="auth-field">
-            <label htmlFor="firstName">First Name</label>
-            <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="John"
-            />
+        <section className="auth-panel">
+          <div className="auth-panel__head">
+            <h2 className="auth-panel__title">Personal Info</h2>
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="lastName">Last Name</label>
-            <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Doe"
-            />
-          </div>
+          {error && <Alert variant="error">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
 
-          <div className="auth-field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="auth-form auth-form--two-column">
+            <div className="auth-field">
+              <label htmlFor="firstName">First Name</label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleChange}
+                placeholder="Enter your first name"
+                autoComplete="given-name"
+              />
+            </div>
 
-          <div className="auth-field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Minimum 8 characters"
-            />
-          </div>
+            <div className="auth-field">
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleChange}
+                placeholder="Enter your last name"
+                autoComplete="family-name"
+              />
+            </div>
 
-          <div className="auth-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Re-enter your password"
-            />
-          </div>
+            <div className="auth-field">
+              <label htmlFor="idNumber">ID Number</label>
+              <input
+                id="idNumber"
+                name="idNumber"
+                type="text"
+                value={formData.idNumber}
+                onChange={handleChange}
+                placeholder="Enter your ID number"
+                inputMode="numeric"
+              />
+            </div>
 
-          <button type="submit" className="auth-button">
-            Register
-          </button>
-        </form>
+            <div className="auth-field">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+                autoComplete="tel"
+              />
+            </div>
 
-        <p className="auth-switch-text">
-          Already have an account? <Link to="/">Login</Link>
-        </p>
+            <div className="auth-field auth-field--full">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="test@bank.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="auth-field auth-field--full">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a password"
+                autoComplete="new-password"
+              />
+              <span className="auth-hint">Use at least 8 characters.</span>
+            </div>
+
+            <div className="auth-field auth-field--full">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="auth-actions auth-actions--full">
+              <Button type="submit" size="lg" loading={loading}>
+                Create Account
+              </Button>
+            </div>
+          </form>
+
+          <p className="auth-switch-text">
+            Already have an account? <Link to="/">Login</Link>
+          </p>
+        </section>
       </div>
     </div>
   );
