@@ -1,15 +1,27 @@
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import "../layout/styles/navbar.css";
 import "../../components/ui/styles/button.css";
 
 // TODO Sprint 2: replace with useSelector((state) => state.auth.user)
-const MOCK_USER = { name: "Alexandra Mokoena", tier: "Private Client" };
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem("currentUser");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
 export default function Navbar({ sidebarOpen, onToggleSidebar }) {
   const navigate = useNavigate();
+  const user = getCurrentUser();
 
   // TODO Sprint 2: dispatch(logout()) before navigating
-  const handleLogout = () => navigate("/login");
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    navigate("/");
+  };
 
   return (
     <nav className="navbar">
@@ -40,8 +52,8 @@ export default function Navbar({ sidebarOpen, onToggleSidebar }) {
       {/* Right side */}
       <div className="navbar__nav">
         <div className="navbar__user">
-          <span className="navbar__user-name">{MOCK_USER.name}</span>
-          <span className="navbar__user-label">{MOCK_USER.tier}</span>
+          <span className="navbar__user-name">{user.firstName ?? "Guest"}</span>
+          <span className="navbar__user-label">{user.tier ?? "Standard"}</span>
         </div>
         <div className="navbar__sep" aria-hidden="true" />
         <button className="btn btn--outline btn--sm" onClick={handleLogout}>

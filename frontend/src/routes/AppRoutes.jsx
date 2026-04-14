@@ -12,23 +12,35 @@ import Transactions from '../pages/Transactions/Transactions';
 import Profile from '../pages/Profile/Profile';
 import Cards from '../pages/Cards/Cards';
 import Transact from "../pages/Transact/Transact";
+import Landing from "../pages/Landing/Landing";
 
 // Layout
 import AppLayout from '../components/layout/AppLayout';
+
+const isAuthenticated = () => true;
+
+function PrivateRoute({ children }) {
+  return isAuthenticated() ? children : <Navigate to="/login" replace />;
+}
 
 export default function AppRoutes() {
   return (
     <Routes>
 
       {/* Auth Routes (No Layout) */}
-      <Route path="/" element={<Navigate to="/deposit" replace />} />
+      <Route path="/" element={<Landing/>} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected / Main App Routes */}
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
+      {/* Protected routes — AppLayout renders <Outlet />, children render into it */}
+      <Route
+        element={
+          <PrivateRoute>
+            <AppLayout />
+          </PrivateRoute>
+        }
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="cards" element={<Cards />} />
         <Route path="transact" element={<Transact />} />
         <Route path="deposit" element={<Deposit />} />
@@ -38,7 +50,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* Fallback Route */}
-      <Route path="*" element={<h2>Page Not Found</h2>} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
     </Routes>
   );
