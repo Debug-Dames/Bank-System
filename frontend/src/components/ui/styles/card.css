@@ -1,0 +1,89 @@
+/* ============================================================
+   Card — components/ui/styles/card.css
+   ============================================================ */
+
+.card {
+  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
+  border: 1px solid var(--stroke-subtle);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Inner radial glow at top-left */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius-lg) + 2px);
+  background: radial-gradient(600px 140px at 15% 0%, rgba(195, 160, 51, 0.18), transparent 60%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.card > * { position: relative; z-index: 1; }
+
+/* ── Variants ─────────────────────────────────────────────── */
+.card--narrow { max-width: var(--card-max-width); }
+
+.card--hero {
+  padding: 20px;
+}
+
+.card--flat {
+  box-shadow: none;
+  background: var(--bg-element);
+}
+
+.card--flat::after { display: none; }
+
+/* ── Header ───────────────────────────────────────────────── */
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-normal);
+  color: var(--text-primary);
+  /* Override global h-tag display font back to body for card titles */
+  font-family: var(--font-body);
+}
+
+.card__link {
+  color: rgba(234, 208, 122, 0.92);
+  text-decoration: none;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.card__link:hover { text-decoration: underline; opacity: 1; }
+
+/* ── Body ─────────────────────────────────────────────────── */
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+.card__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--stroke-subtle);
+}

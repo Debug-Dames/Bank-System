@@ -1,0 +1,203 @@
+/* ============================================================
+   NovaBank — Global Styles
+   src/styles/global.css
+   ============================================================ */
+
+/* ── Reset ────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--color-ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-wide);
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-normal);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl);  }
+h4 { font-size: var(--text-lg);  }
+h5 { font-size: var(--text-base);}
+h6 { font-size: var(--text-sm);  }
+
+p {
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: var(--font-semibold);
+  transition: opacity var(--transition-fast);
+}
+a:hover { opacity: 0.8; text-decoration: underline; }
+
+ul, ol { list-style: none; }
+
+img, svg, video { display: block; max-width: 100%; }
+
+/* ── Form Reset ───────────────────────────────────────────── */
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+button { cursor: pointer; border: none; background: none; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--stroke-subtle); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* ── Selection ────────────────────────────────────────────── */
+::selection {
+  background-color: rgba(195, 160, 51, 0.28);
+  color: var(--text-primary);
+}
+
+/* ── Focus ────────────────────────────────────────────────── */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Page background — used on auth and standalone pages ─── */
+.page-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
+  background:
+    radial-gradient(900px 700px at 18% 18%, rgba(234, 208, 122, 0.12), transparent 62%),
+    radial-gradient(900px 700px at 82% 28%, rgba(111, 94, 35, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 60% 90%, rgba(195, 160, 51, 0.10), transparent 58%),
+    linear-gradient(140deg, #0b0b0b, #0f0f0f 55%, #0b0b0b);
+}
+
+/* ── Accent text ──────────────────────────────────────────── */
+.accent {
+  color: rgba(234, 208, 122, 0.95);
+  font-weight: var(--font-semibold);
+}
+
+/* ── Pill / Badge ─────────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--stroke-subtle);
+  background: var(--bg-element);
+  color: var(--text-primary);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-normal);
+  text-transform: capitalize;
+}
+
+.pill--muted   { color: var(--text-muted); border-color: rgba(234, 208, 122, 0.10); }
+.pill--type    { border-color: rgba(195, 160, 51, 0.22); background: rgba(195, 160, 51, 0.10); }
+.pill--deposit { border-color: rgba(234, 208, 122, 0.26); background: rgba(234, 208, 122, 0.12); }
+.pill--withdraw{ border-color: rgba(111, 94, 35, 0.35);  background: rgba(111, 94, 35, 0.20); }
+.pill--success { border-color: var(--color-success-border); background: var(--color-success-bg); color: var(--color-success); }
+.pill--error   { border-color: var(--color-error-border);   background: var(--color-error-bg);   color: var(--color-error); }
+
+/* ── Divider ──────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  border: none;
+  background: var(--stroke-subtle);
+  margin: var(--space-6) 0;
+}
+
+/* ── Utilities ────────────────────────────────────────────── */
+.text-muted    { color: var(--text-muted); }
+.text-dim      { color: var(--text-dim); }
+.text-accent   { color: var(--text-secondary); }
+.text-success  { color: var(--color-success); }
+.text-error    { color: var(--color-error); }
+.text-display  { font-family: var(--font-display); }
+.text-mono     { font-family: var(--font-mono); }
+.text-sm       { font-size: var(--text-sm); }
+.text-xs       { font-size: var(--text-xs); }
+.text-center   { text-align: center; }
+.font-bold     { font-weight: var(--font-bold); }
+.font-semibold { font-weight: var(--font-semibold); }
+.mt-auto       { margin-top: auto; }
+.w-full        { width: 100%; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fadeUp { animation: fadeUp 0.3s ease forwards; }
+.animate-fadeIn { animation: fadeIn 0.25s ease forwards; }
+.animate-spin   { animation: spin 0.8s linear infinite; }
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
