@@ -30,7 +30,9 @@ export default function AppRoutes() {
       {/* Auth Routes (No Layout) */}
       <Route path="/" element={<Landing/>} />
       <Route path="/login" element={<Login />} />
+
       <Route path="/register" element={<Register />} />
+  
 
       {/* Protected routes — AppLayout renders <Outlet />, children render into it */}
       <Route
@@ -47,6 +49,8 @@ export default function AppRoutes() {
         <Route path="withdraw" element={<Withdraw />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="profile" element={<Profile />} />
+        
+        
       </Route>
 
       {/* Fallback Route */}
