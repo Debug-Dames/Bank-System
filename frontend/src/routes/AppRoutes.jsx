@@ -23,7 +23,9 @@ export default function AppRoutes() {
       {/* Auth Routes (No Layout) */}
       <Route path="/" element={<Navigate to="/deposit" replace />} />
       <Route path="/login" element={<Login />} />
+
       <Route path="/register" element={<Register />} />
+  
 
       {/* Protected / Main App Routes */}
       <Route path="/" element={<AppLayout />}>
@@ -35,6 +37,8 @@ export default function AppRoutes() {
         <Route path="withdraw" element={<Withdraw />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="profile" element={<Profile />} />
+        
+        
       </Route>
 
       {/* Fallback Route */}

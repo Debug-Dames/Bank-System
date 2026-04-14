@@ -150,3 +150,100 @@
     grid-template-columns: 1fr;
   }
 }
+
+.dashboard-favs__menu {
+  position: relative;
+}
+
+.dashboard-favs__menu summary {
+  list-style: none;
+}
+
+.dashboard-favs__menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-favs__menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: min(320px, 70vw);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-subtle);
+  background:
+    radial-gradient(560px 200px at 25% 0%, rgba(195, 160, 51, 0.18), transparent 62%),
+    rgba(0, 0, 0, 0.88);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  z-index: 20;
+}
+
+.dashboard-favs__menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 250, 235, 0.92);
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.dashboard-favs__menu-item:hover:not(:disabled) {
+  background: var(--accent-subtle-hover);
+  border-color: rgba(234, 208, 122, 0.24);
+}
+
+.dashboard-favs__menu-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.dashboard-favs__menu-label {
+  font-weight: var(--font-semibold);
+}
+
+.dashboard-favs__menu-meta {
+  color: rgba(255, 250, 235, 0.58);
+  font-size: var(--text-xs);
+}
+
+.dashboard-favs__list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-favs__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.dashboard-favs__link {
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-favs__label {
+  font-weight: var(--font-extrabold);
+  letter-spacing: 0.1px;
+}
+
+.dashboard-favs__meta {
+  color: rgba(255, 250, 235, 0.58);
+  font-size: var(--text-xs);
+}
