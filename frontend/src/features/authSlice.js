@@ -12,9 +12,7 @@ const mockAccount = {
   id: "OB — 0041 — 2025",
 };
 
-const mockBalance = 5000;
-
-const mockSavingsPlans = [];
+const mockSavingsPlans = [500];
 
 const mockCards = [
   {
@@ -58,7 +56,7 @@ const authSlice = createSlice({
   initialState: {
     user: mockUser,
     account: mockAccount,
-    balance: mockBalance,
+    balance: 0,
     cards: mockCards,
     savingsPlans: mockSavingsPlans,
     transactions: {
@@ -76,6 +74,16 @@ const authSlice = createSlice({
       const n = Number(action.payload);
       if (!Number.isFinite(n) || n < 0) return;
       state.balance = n;
+    },
+
+    clearTransactions: (state) => {
+      if (!state.transactions) {
+        state.transactions = { status: "succeeded", error: null, items: [] };
+        return;
+      }
+      state.transactions.items = [];
+      state.transactions.error = null;
+      if (state.transactions.status === "idle") state.transactions.status = "succeeded";
     },
 
     prependTransaction: (state, action) => {
@@ -139,6 +147,7 @@ const authSlice = createSlice({
 export const {
   updateUser,
   setBalance,
+  clearTransactions,
   prependTransaction,
   updateCardLimits,
   setCardBlocked,

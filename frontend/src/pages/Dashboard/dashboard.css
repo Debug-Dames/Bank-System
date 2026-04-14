@@ -163,11 +163,19 @@
   display: none;
 }
 
+.dashboard-favs__head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.dashboard-favs__menu[open] {
+  width: 100%;
+}
+
 .dashboard-favs__menu-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 10px);
-  width: min(320px, 70vw);
+  position: static;
+  margin-top: 10px;
+  width: 100%;
   display: grid;
   gap: 4px;
   padding: 10px;
@@ -177,7 +185,8 @@
     radial-gradient(560px 200px at 25% 0%, rgba(195, 160, 51, 0.18), transparent 62%),
     rgba(0, 0, 0, 0.88);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-  z-index: 20;
+  max-height: 280px;
+  overflow: auto;
 }
 
 .dashboard-favs__menu-item {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { fetchTransactions } from "../../features/authSlice";
+import { clearTransactions, fetchTransactions } from "../../features/authSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -42,15 +42,9 @@ function safeParseFavorites(raw) {
   }
 }
 
-function maskCardNumber(number) {
-  const digits = String(number ?? "").replace(/\s+/g, "");
-  const last4 = digits.slice(-4).padStart(4, "\u2022");
-  return `\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ${last4}`;
-}
-
 export default function Dashboard() {
   const dispatch = useDispatch();
-  const { user = {}, balance = 0, cards = [] } = useSelector((state) => state.auth || {});
+  const { user = {}, balance = 0 } = useSelector((state) => state.auth || {});
   const { status: txStatus, items: txItems = [] } = useSelector(
     (state) => state.auth?.transactions || { status: "idle", items: [] }
   );
@@ -135,7 +129,7 @@ export default function Dashboard() {
         </section>
 
         <section className="card">
-          <div className="card__head">
+          <div className="card__head dashboard-favs__head">
             <h2 className="card__title">Favorites</h2>
             <details className="dashboard-favs__menu">
               <summary className="btn btn--outline btn--sm">
@@ -189,9 +183,22 @@ export default function Dashboard() {
         <section className="card">
           <div className="card__head">
             <h2 className="card__title">Recent Activity</h2>
-            <Link className="btn btn--ghost btn--sm" to="/transactions">
-              View all
-            </Link>
+            <div className="dashboard-view__cta">
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => {
+                  const ok = window.confirm("Clear recent activity? (mock)");
+                  if (!ok) return;
+                  dispatch(clearTransactions());
+                }}
+              >
+                Clear
+              </button>
+              <Link className="btn btn--ghost btn--sm" to="/transactions">
+                View all
+              </Link>
+            </div>
           </div>
 
           {txStatus === "loading" && (
@@ -238,7 +245,7 @@ export default function Dashboard() {
           )}
         </section>
 
-       
+        
 
         <section className="card dashboard-view__full">
           <div className="card__head">

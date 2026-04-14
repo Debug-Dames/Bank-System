@@ -2,19 +2,45 @@
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Transaction history (in-memory mock).
-const txHistory = [];
+// Seeded transaction history so Transactions isn't empty on first load.
+// IMPORTANT: keep the latest seeded balance at R 5000 to match the app default.
+const seededTransactions = [
+  {
+    transactionId: "txn_20260401_001",
+    type: "deposit",
+    amount: 1500.0,
+    balanceAfter: 6500.0,
+    date: "2026-04-01T09:14:00.000Z",
+  },
+  {
+    transactionId: "txn_20260406_002",
+    type: "withdrawal",
+    amount: 500.0,
+    balanceAfter: 6000.0,
+    date: "2026-04-06T16:40:00.000Z",
+  },
+  {
+    transactionId: "txn_20260412_003",
+    type: "withdrawal",
+    amount: 1000.0,
+    balanceAfter: 5000.0,
+    date: "2026-04-12T11:11:00.000Z",
+  },
+];
 
-// Start at R 5000 and adjust on each transaction.
-let currentBalance = 5000;
+const txHistory = seededTransactions
+  .slice()
+  .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+let currentBalance = Number(txHistory?.[0]?.balanceAfter) || 5000;
+ 
 function requireDebit(amount) {
   const n = Number(amount);
   if (!Number.isFinite(n) || n <= 0) throw new Error("Amount must be greater than zero");
   if (n > currentBalance) throw new Error("Insufficient funds");
   return n;
 }
-
+ 
 function createElectricityToken() {
   const a = Math.floor(Math.random() * 1e10).toString().padStart(10, "0");
   const b = Math.floor(Math.random() * 1e10).toString().padStart(10, "0");
@@ -41,11 +67,11 @@ function recordTx(tx) {
   txHistory.unshift(tx);
   return tx;
 }
-
+ 
 // --- Auth ---
 export const loginUser = async () => {
   await delay(500);
-
+ 
   return {
     token: "mock-token",
     user: {
@@ -55,26 +81,26 @@ export const loginUser = async () => {
     },
   };
 };
-
+ 
 export const registerUser = async () => {
   await delay(700);
-
+ 
   return {
     success: true,
     message: "User registered successfully",
   };
 };
-
+ 
 // --- Balance ---
 export const getBalance = async ({ accountId }) => {
   await delay(500);
-
+ 
   return {
     accountId,
     balance: currentBalance,
   };
 };
-
+ 
 // --- Deposit ---
 export const depositFunds = async ({ accountId, amount }) => {
   await delay(800);
@@ -95,7 +121,7 @@ export const depositFunds = async ({ accountId, amount }) => {
     accountId,
   });
 };
-
+ 
 // --- Withdraw ---
 export const withdrawFunds = async ({ accountId, amount }) => {
   await delay(900);
@@ -110,7 +136,7 @@ export const withdrawFunds = async ({ accountId, amount }) => {
     accountId,
   });
 };
-
+ 
 // --- Airtime / Data / Electricity / Beneficiary payments ---
 export const buyAirtime = async ({ accountId, provider, phone, amount }) => {
   await delay(800);
@@ -127,7 +153,7 @@ export const buyAirtime = async ({ accountId, provider, phone, amount }) => {
     phone: String(phone || "").trim(),
   });
 };
-
+ 
 export const buyData = async ({ accountId, provider, phone, bundle, amount }) => {
   await delay(800);
   const n = requireDebit(amount);
@@ -144,7 +170,7 @@ export const buyData = async ({ accountId, provider, phone, bundle, amount }) =>
     bundle: String(bundle || "").trim(),
   });
 };
-
+ 
 export const buyElectricity = async ({ accountId, meterNumber, amount }) => {
   await delay(900);
   const n = requireDebit(amount);
@@ -161,7 +187,7 @@ export const buyElectricity = async ({ accountId, meterNumber, amount }) => {
     token,
   });
 };
-
+ 
 export const payBeneficiary = async ({
   accountId,
   beneficiaryName,
@@ -208,7 +234,7 @@ export const sendCash = async ({ accountId, recipientName, phone, reference, amo
     expiresAt,
   });
 };
-
+ 
 // --- Transactions ---
 export const getTransactions = async ({ accountId }) => {
   await delay(600);
@@ -218,4 +244,3 @@ export const getTransactions = async ({ accountId }) => {
     transactions: txHistory.map((tx) => ({ ...tx })).sort((a, b) => new Date(b.date) - new Date(a.date)),
   };
 };
-
