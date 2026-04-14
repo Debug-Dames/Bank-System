@@ -324,7 +324,7 @@
 
 .land-hero__actions {
   display: flex;
-  margin-bottom: 90px;
+  margin-bottom: 10rem;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
@@ -583,7 +583,7 @@
   position: relative;
 }
 .land-promise__card--accent {
-  bottom: -24px;
+  bottom: -74px;
   right: -24px;
   width: 58%;
   padding: 20px 22px;
