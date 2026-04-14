@@ -14,7 +14,7 @@ const mockAccount = {
   id: "OB — 0041 — 2025",
 };
 
-const mockBalance = 5000;
+const mockBalance = 7100;
 
 const mockSavingsPlans = [];
 
