@@ -1,0 +1,24 @@
+{
+  "name": "bank-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server/server.js",
+ "scripts": {
+  "dev": "nodemon src/server.js",
+  "start": "node src/server.js"
+},
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "helmet": "^7.2.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "description": "Node.js + Express REST API for Bank System",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
