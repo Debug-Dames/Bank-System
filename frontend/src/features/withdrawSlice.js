@@ -1,12 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { withdrawFunds } from "../service/mockApi";
+import { prependTransaction, setBalance } from "./authSlice";
 
 // Async thunk for handling the withdrawal process
 export const withdraw = createAsyncThunk(
   "withdraw/withdrawFunds",
-  async ({ accountId, amount }, { rejectWithValue }) => {
+  async ({ accountId, amount }, { dispatch, rejectWithValue }) => {
     try {
       const data = await withdrawFunds({ accountId, amount });
+      dispatch(setBalance(data.balanceAfter));
+      dispatch(prependTransaction(data));
       return data;
     } catch (error) {
       return rejectWithValue(error.message || "Withdrawal failed");
