@@ -197,7 +197,7 @@ export default function Landing() {
               Sign In <ArrowRight />
             </Link>
         
-        <Link to="/login" className="land-nav__cta">
+        <Link to="/register" className="land-nav__cta">
           Open Account <ArrowRight />
         </Link>
       </nav>
@@ -371,7 +371,7 @@ export default function Landing() {
             Open your account in under five minutes.
           </p>
           <div className="land-cta__actions reveal reveal-delay-3">
-            <Link to="/login" className="land-btn-primary">
+            <Link to="/register" className="land-btn-primary">
               Open Account <ArrowRight />
             </Link>
             <Link to="/login" className="land-btn-ghost">Sign In</Link>
