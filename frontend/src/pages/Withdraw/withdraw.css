@@ -10,35 +10,93 @@
 
 /* ── Page wrapper ─────────────────────────────────────────── */
 .withdraw-page {
+  position: relative;
   min-height: calc(100vh - var(--navbar-height));
   display: flex;
   align-items: center;
   justify-content: center;
   padding: clamp(16px, 3vw, 32px);
-
+  overflow: hidden;
+ 
   background:
     radial-gradient(900px 700px at 18% 18%, rgba(234, 208, 122, 0.12), transparent 62%),
     radial-gradient(900px 700px at 82% 28%, rgba(111, 94, 35, 0.16), transparent 60%),
     radial-gradient(700px 500px at 60% 90%, rgba(195, 160, 51, 0.10), transparent 58%),
     linear-gradient(140deg, #0b0b0b, #0f0f0f 55%, #0b0b0b);
 }
-
-/* ── Card overrides ───────────────────────────────────────── */
+ 
+/* Breathing glow behind the card */
+.withdraw-page::before {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(195, 160, 51, 0.10) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: breathe 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+ 
+@keyframes breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
+  50%       { transform: translate(-50%, -50%) scale(1.2); opacity: 1;   }
+}
+ 
+/* ── Background decorative glyph ─────────────────────────── */
+.withdraw-glyph {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  font-size: clamp(280px, 30vw, 480px);
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(195, 160, 51, 0.06);
+  line-height: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-42%, -52%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  letter-spacing: -0.05em;
+}
+ 
+/* ── Card ─────────────────────────────────────────────────── */
 .withdraw-card {
+  position: relative;
+  z-index: 1;
   width: min(var(--card-max-width), 100%);
   padding: 28px;
 }
-
+ 
+/* Shake on validation fail */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-7px); }
+  30%       { transform: translateX(7px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-2px); }
+  90%       { transform: translateX(2px); }
+}
+ 
+.withdraw-card--shake {
+  animation: shake 0.45s ease forwards;
+}
+ 
 /* ── Header text ──────────────────────────────────────────── */
 .withdraw-eyebrow {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   margin-bottom: var(--space-2);
 }
-
+ 
 .withdraw-title {
   font-family: var(--font-display);
   font-weight: var(--font-extrabold);
@@ -47,20 +105,167 @@
   letter-spacing: 0.3px;
   margin: 0 0 var(--space-2);
 }
-
+ 
 .withdraw-subtitle {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-5);
   line-height: var(--leading-relaxed);
 }
 
+/* ── Live balance ─────────────────────────────────────────── */
+.withdraw-account {
+  margin-bottom: 20px;
+}
+ 
+/* ── Live balance ─────────────────────────────────────────── */
+.withdraw-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.18);
+  margin-bottom: 18px;
+}
+ 
+.withdraw-balance__label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+ 
+.withdraw-balance__amount {
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  font-size: 1.3rem;
+  color: var(--color-light-gold);
+  letter-spacing: 0.3px;
+}
+ 
 /* ── Form ─────────────────────────────────────────────────── */
 .withdraw-form {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
+.form-input option {
+  background: #1A1A1A;
+  color: var(--gradient-gold);
+}
+ 
+/* ── Preset amounts ───────────────────────────────────────── */
+.withdraw-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+ 
+.withdraw-preset {
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+ 
+.withdraw-preset:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.06);
+  border-color: rgba(234, 208, 122, 0.22);
+  color: var(--text-primary);
+}
+ 
+.withdraw-preset--active {
+  color: var(--text-inverse);
+  border-color: rgba(234, 208, 122, 0.45);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+ 
+/* ── Input prefix active glow ─────────────────────────────── */
+.input-prefix--active {
+  color: var(--color-light-gold);
+}
+ 
+/* ── Live deduction preview ───────────────────────────────── */
+.withdraw-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+ 
+  /* Hidden by default */
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height var(--transition-base),
+    opacity var(--transition-base),
+    border-color var(--transition-base),
+    background var(--transition-base),
+    padding var(--transition-base);
+}
+ 
+.withdraw-preview--visible {
+  max-height: 60px;
+  opacity: 1;
+  border-color: var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.14);
+}
+ 
+.withdraw-preview span:last-child {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+ 
+/* ── Submit button shimmer ────────────────────────────────── */
+.withdraw-btn {
+  position: relative;
+  overflow: hidden;
+}
+ 
+.withdraw-btn__shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 40%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.18) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+ 
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+ 
 /* ── Success state ────────────────────────────────────────── */
 .withdraw-success {
   display: flex;
@@ -69,57 +274,76 @@
   text-align: center;
   gap: var(--space-5);
 }
-
+ 
 .withdraw-success__icon {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(234, 208, 122, 0.26);
+  border: 1px solid rgba(234, 208, 122, 0.30);
   background: rgba(234, 208, 122, 0.08);
   color: var(--color-light-gold);
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: goldPulse 2.5s ease-in-out infinite;
 }
-
-.withdraw-success__icon svg {
-  width: 22px;
-  height: 22px;
+ 
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(195, 160, 51, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(195, 160, 51, 0.10); }
 }
-
+ 
 .withdraw-success__copy {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-
-.withdraw-success__label {
-  font-size: 0.72rem;
-  font-weight: var(--font-semibold);
-  color: var(--text-secondary);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  margin: 0;
-}
-
+ 
 .withdraw-success__amount {
   font-family: var(--font-display);
   font-weight: var(--font-extrabold);
-  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-size: clamp(2rem, 3vw, 2.8rem);
   color: var(--text-primary);
   letter-spacing: 0.4px;
   margin: 0;
 }
-
-/* ── Transaction detail table ─────────────────────────────── */
+ 
+/* ── Gold divider with centre mark ───────────────────────── */
+.withdraw-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+ 
+.withdraw-divider__line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(195, 160, 51, 0.35));
+}
+ 
+.withdraw-divider:last-child .withdraw-divider__line {
+  background: linear-gradient(to left, transparent, rgba(195, 160, 51, 0.35));
+}
+ 
+.withdraw-divider__mark {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle at 35% 35%, var(--color-light-gold), var(--color-gold));
+  box-shadow: 0 0 0 4px rgba(195, 160, 51, 0.12);
+  flex-shrink: 0;
+}
+ 
+/* ── Receipt detail rows ──────────────────────────────────── */
 .withdraw-success__details {
   width: 100%;
   border: 1px solid var(--stroke-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg-element);
+  background: rgba(0, 0, 0, 0.18);
 }
-
+ 
 .withdraw-success__row {
   display: flex;
   justify-content: space-between;
@@ -129,19 +353,34 @@
   color: var(--text-muted);
   gap: var(--space-4);
 }
-
+ 
 .withdraw-success__row:not(:last-child) {
   border-bottom: 1px solid var(--stroke-subtle);
 }
-
+ 
 .withdraw-success__row span:last-child {
   font-weight: var(--font-semibold);
   color: var(--text-primary);
   text-align: right;
 }
-
+ 
 .withdraw-success__mono {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: 1px;
+}
+ 
+/* ── Success action buttons ───────────────────────────────── */
+.withdraw-success__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+ 
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .withdraw-presets {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
