@@ -1,44 +1,87 @@
+/* ============================================================
+   Deposit Page — pages/Deposit/deposit.css
+
+   Imports in Deposit.jsx (already present):
+     ../../components/ui/styles/button.css
+     ../../components/ui/styles/card.css
+     ../../components/ui/styles/input.css
+     ../../components/ui/styles/alert.css
+   ============================================================ */
+
+/* ── Page wrapper ─────────────────────────────────────────── */
 .deposit-page {
-  min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(209, 163, 79, 0.12), transparent 28%),
-    linear-gradient(180deg, #020406 0%, #07090f 40%, #0b101a 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 32px;
-}
-
-.deposit-card {
-  width: min(100%, 520px);
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
-  border: 1px solid var(--stroke-subtle);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  box-shadow: var(--shadow-card);
   position: relative;
+  min-height: calc(100vh - var(--navbar-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
   overflow: hidden;
+
+  background:
+    radial-gradient(900px 700px at 18% 18%, rgba(234, 208, 122, 0.12), transparent 62%),
+    radial-gradient(900px 700px at 82% 28%, rgba(111, 94, 35, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 60% 90%, rgba(195, 160, 51, 0.10), transparent 58%),
+    linear-gradient(140deg, #0b0b0b, #0f0f0f 55%, #0b0b0b);
 }
 
-.deposit-card::after {
+/* Breathing glow behind the card */
+.deposit-page::before {
   content: "";
   position: absolute;
-  inset: -2px;
-  border-radius: calc(var(--radius-lg) + 2px);
-  background: radial-gradient(600px 140px at 15% 0%, rgba(195, 160, 51, 0.18), transparent 60%);
-  opacity: 0.9;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(195, 160, 51, 0.10) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: deposit-breathe 6s ease-in-out infinite;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
+@keyframes deposit-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
+  50%       { transform: translate(-50%, -50%) scale(1.2); opacity: 1;   }
+}
+
+/* ── Background decorative glyph ─────────────────────────── */
+.deposit-glyph {
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  font-size: clamp(280px, 30vw, 480px);
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(195, 160, 51, 0.06);
+  line-height: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-42%, -52%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  letter-spacing: -0.05em;
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.deposit-card {
+  position: relative;
+  z-index: 1;
+  width: min(var(--card-max-width), 100%);
+  padding: 28px;
+}
+
+/* ── Header text ──────────────────────────────────────────── */
 .deposit-header {
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .deposit-eyebrow {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   margin-bottom: var(--space-2);
 }
@@ -46,45 +89,110 @@
 .deposit-title {
   font-family: var(--font-display);
   font-weight: var(--font-extrabold);
-  font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
   color: var(--text-primary);
   letter-spacing: 0.3px;
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-2);
 }
 
 .deposit-description {
   color: var(--text-muted);
   font-size: var(--text-sm);
+  margin: 0 0 var(--space-5);
   line-height: var(--leading-relaxed);
-  margin: 0;
 }
 
+/* ── Account select ───────────────────────────────────────── */
+.deposit-account {
+  margin-bottom: 20px;
+}
+
+.form-input option {
+  background: #1A1A1A;
+  color: var(--gradient-gold);
+}
+
+/* ── Live balance ─────────────────────────────────────────── */
+.deposit-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.18);
+  margin-bottom: 18px;
+}
+
+.deposit-balance__label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.deposit-balance__amount {
+  font-family: var(--font-display);
+  font-weight: var(--font-extrabold);
+  font-size: 1.3rem;
+  color: var(--color-light-gold);
+  letter-spacing: 0.3px;
+}
+
+/* ── Form ─────────────────────────────────────────────────── */
 .deposit-form {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
-.deposit-form input {
-  width: 100%;
-  padding: 16px 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(209, 163, 79, 0.26);
-  background: rgba(26, 29, 35, 0.92);
+/* ── Preset amounts ───────────────────────────────────────── */
+.deposit-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.deposit-preset {
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+  background: rgba(0, 0, 0, 0.14);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.deposit-preset:hover {
+  transform: translateY(-1px);
+  background: rgba(234, 208, 122, 0.06);
+  border-color: rgba(234, 208, 122, 0.22);
   color: var(--text-primary);
-  font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.deposit-form input::placeholder {
-  color: rgba(226, 232, 240, 0.65);
+.deposit-preset--active {
+  color: var(--text-inverse);
+  border-color: rgba(234, 208, 122, 0.45);
+  background: linear-gradient(180deg, rgba(234, 208, 122, 0.95), rgba(195, 160, 51, 0.95));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
-.deposit-form input:focus {
-  outline: none;
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.12);
+/* ── Input prefix active glow ─────────────────────────────── */
+.input-prefix--active {
+  color: var(--color-light-gold);
 }
 
+/* ── Success state ────────────────────────────────────────── */
 .deposit-success {
   display: flex;
   flex-direction: column;
@@ -94,20 +202,26 @@
 }
 
 .deposit-success__icon {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(234, 208, 122, 0.26);
+  border: 1px solid rgba(234, 208, 122, 0.30);
   background: rgba(234, 208, 122, 0.08);
   color: var(--color-light-gold);
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: goldPulse 2.5s ease-in-out infinite;
 }
 
 .deposit-success__icon svg {
   width: 22px;
   height: 22px;
+}
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(195, 160, 51, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(195, 160, 51, 0.10); }
 }
 
 .deposit-success__copy {
@@ -117,10 +231,10 @@
 }
 
 .deposit-success__label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   margin: 0;
 }
@@ -128,18 +242,19 @@
 .deposit-success__amount {
   font-family: var(--font-display);
   font-weight: var(--font-extrabold);
-  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-size: clamp(2rem, 3vw, 2.8rem);
   color: var(--text-primary);
   letter-spacing: 0.4px;
   margin: 0;
 }
 
+/* ── Receipt detail rows ──────────────────────────────────── */
 .deposit-success__details {
   width: 100%;
   border: 1px solid var(--stroke-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--bg-element);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .deposit-success__row {
@@ -168,16 +283,17 @@
   letter-spacing: 1px;
 }
 
-@media (max-width: 680px) {
-  .deposit-page {
-    padding: 24px;
-  }
+/* ── Success action buttons ───────────────────────────────── */
+.deposit-success__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
 
-  .deposit-card {
-    padding: 24px;
-  }
-
-  .deposit-title {
-    font-size: 2rem;
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .deposit-presets {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
