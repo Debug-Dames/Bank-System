@@ -244,13 +244,13 @@
   font-weight: var(--font-extrabold);
   font-size: clamp(2rem, 3vw, 2.8rem);
   color: var(--text-primary);
-  letter-spacing: 0.4px;
   margin: 0;
 }
 
 /* ── Receipt detail rows ──────────────────────────────────── */
 .deposit-success__details {
   width: 100%;
+  background: var(--bg-element);
   border: 1px solid var(--stroke-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -260,11 +260,9 @@
 .deposit-success__row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 10px 14px;
   font-size: var(--text-sm);
   color: var(--text-muted);
-  gap: var(--space-4);
 }
 
 .deposit-success__row:not(:last-child) {
@@ -274,7 +272,6 @@
 .deposit-success__row span:last-child {
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  text-align: right;
 }
 
 .deposit-success__mono {
