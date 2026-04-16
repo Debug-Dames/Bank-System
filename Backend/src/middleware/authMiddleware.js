@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
     // format: Bearer TOKEN
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET_KEY");
 
     req.user = decoded; // attach user data
     next();
@@ -21,4 +21,4 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+export default authMiddleware;
