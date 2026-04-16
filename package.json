@@ -17,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/Debug-Dames/Bank-System/issues"
   },
-  "homepage": "https://github.com/Debug-Dames/Bank-System#readme"
+  "homepage": "https://github.com/Debug-Dames/Bank-System#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mongoose": "^9.4.1"
+  }
 }
