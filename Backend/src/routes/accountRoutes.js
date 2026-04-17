@@ -5,7 +5,7 @@ import {
   withdraw,
 } from "../controllers/accountController.js";
 
-import authMiddleware from "../middleware/authMiddleware.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
