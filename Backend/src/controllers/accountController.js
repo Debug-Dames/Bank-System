@@ -1,22 +1,41 @@
-import Account from "../models/Account.js";
+import {
+  getUserBalance,
+  depositAmount,
+  withdrawAmount,
+} from "../services/accountService.js";
 
+// GET BALANCE
 export const getBalance = async (req, res) => {
   try {
-    const { accountNumber } = req.query;
-
-    const account = await Account.findOne({ accountNumber });
-    if (!account) {
-      return res.status(404).json({ message: "Account not found" });
-    }
-
-    res.json({
-      message: "Balance retrieved successfully",
-      balance: account.balance,
-      accountNumber: account.accountNumber,
-      accountType: account.accountType,
-    });
-
+    const result = await getUserBalance(req.user.userId);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// DEPOSIT
+export const deposit = async (req, res) => {
+  try {
+    const result = await depositAmount(
+      req.user.userId,
+      req.body.amount
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// WITHDRAW
+export const withdraw = async (req, res) => {
+  try {
+    const result = await withdrawAmount(
+      req.user.userId,
+      req.body.amount
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
