@@ -1,24 +1,45 @@
 import jwt from "jsonwebtoken";
+import { User } from "../models/index.js";
 
-const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-
-  // no token
-  if (!authHeader) {
+ 
+  // No token provided
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Access denied. No token provided" });
   }
 
-  try {
-    // format: Bearer TOKEN
-    const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
+  try {
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET_KEY");
 
-    req.user = decoded; // attach user data
+    // Find user and exclude sensitive fields
+    const user = await User.findById(decoded.id).select("-passwordHash -pinHash");
+
+    if (!user) {
+      return res.status(401).json({ message: "User no longer exists" });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({ message: "Account is suspended or closed" });
+    }
+
+    // Attach user to request
+    req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired, please log in again" });
+    }
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
 
-export default authMiddleware;
+export const adminOnly = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  next();
+};
