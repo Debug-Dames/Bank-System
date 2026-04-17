@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -64,6 +65,26 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ idNumber: 1 }, { unique: true });
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ phoneNumber: 1 });
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  // 'this.passwordHash' refers to the password stored in the database
+  return await bcrypt.compare(enteredPassword, this.passwordHash);
+};
+
+// Hash password before saving to DB
+userSchema.pre("save", async function () {
+  // 1. Only hash if modified
+  if (!this.isModified("passwordHash")) {
+    return; // Just return; Mongoose knows you're done because it's async
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+    // No next() needed here!
+  } catch (err) {
+    throw err; // Throwing inside an async pre-save is like calling next(err)
+  }
+});
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 

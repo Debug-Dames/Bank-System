@@ -4,21 +4,16 @@ import Card from "./Card.js";
 import Transaction from "./Transaction.js";
 import Activity from "./Activity.js";
 
-const models = {
-  User,
-  Account,
-  Card,
-  Transaction,
-  Activity,
-};
+// 1. Export them as named exports
+export { User, Account, Card, Transaction, Activity };
 
 export const initializeSchemas = async () => {
+  // Use the models array directly here
+  const allModels = [User, Account, Card, Transaction, Activity];
   await Promise.all(
-    Object.values(models).map(async (model) => {
+    allModels.map(async (model) => {
       await model.createCollection().catch(() => null);
       await model.syncIndexes();
     })
   );
 };
-
-export default models;
