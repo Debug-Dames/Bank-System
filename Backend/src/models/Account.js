@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+export const ACCOUNT_TYPES = ["transactional", "savings", "current"];
+
+
 const accountSchema = new mongoose.Schema(
   {
     user: {
@@ -81,6 +84,15 @@ const accountSchema = new mongoose.Schema(
 
 accountSchema.index({ accountNumber: 1 }, { unique: true });
 accountSchema.index({ user: 1, status: 1 });
+
+accountSchema.add({
+  accountType: {
+    type: String,
+    enum: ACCOUNT_TYPES,
+    default: "transactional",
+  },
+});
+
 
 const Account =
   mongoose.models.Account || mongoose.model("Account", accountSchema);
