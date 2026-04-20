@@ -4,6 +4,62 @@ import { generateReference } from "../utils/helpers.js";
 import { validatePhoneNumber, normalizePhone, validateMeterNumber } from "../utils/validators.js";
 
 /**
+ * Internal helper: credit an account and record transaction + activity
+ * Runs inside a mongoose session for atomicity
+ */
+const recordCredit = async (session, { account, amount, type, note, details }) => {
+  const balanceBefore = account.balance;
+  const balanceAfter = parseFloat((balanceBefore + amount).toFixed(2));
+ 
+  account.balance = balanceAfter;
+  account.availableBalance = balanceAfter;
+  await account.save({ session });
+ 
+  const transaction = await Transaction.create(
+    [
+      {
+        transactionId: generateReference("TXN"),
+        user: account.user,
+        account: account._id,
+        type,
+        channel: "app",
+        direction: "credit",
+        status: "completed",
+        amount,
+        balanceBefore,
+        balanceAfter,
+        netFlow: +amount,
+        reference: generateReference(),
+        note: note || "",
+        processedAt: new Date(),
+        details,
+      },
+    ],
+    { session }
+  );
+ 
+  await Activity.create(
+    [
+      {
+        user: account.user,
+        account: account._id,
+        transactionId: transaction[0]._id,
+        activityType: type,
+        description: note || type,
+        amount,
+        balance: balanceAfter,
+        netFlow: +amount,
+        date: new Date(),
+      },
+    ],
+    { session }
+  );
+ 
+  return transaction[0];
+};
+
+
+/**
  * Internal helper: debit an account and record transaction + activity
  * Runs inside a mongoose session for atomicity
  */
@@ -18,12 +74,13 @@ const recordDebit = async (session, { account, amount, type, note, details }) =>
   const transaction = await Transaction.create(
     [
       {
+        transactionId: generateReference("TXN"),
         user: account.user,
-        accountId: account._id,
+        account: account._id,
         type,
-        channel: "App",
-        direction: "Debit",
-        status: "Completed",
+        channel: "app",
+        direction: "debit",
+        status: "completed",
         amount,
         balanceBefore,
         balanceAfter,
@@ -41,7 +98,7 @@ const recordDebit = async (session, { account, amount, type, note, details }) =>
     [
       {
         user: account.user,
-        accountId: account._id,
+        account: account._id,
         transactionId: transaction[0]._id,
         activityType: type,
         description: note || type,
@@ -55,6 +112,188 @@ const recordDebit = async (session, { account, amount, type, note, details }) =>
   );
 
   return transaction[0];
+};
+
+
+/**
+ * Deposit money into an account
+ * Simulates a cash deposit or EFT from an external source
+ */
+export const depositFunds = async (user, accountId, data) => {
+  const { amount, note, channel = "App" } = data;
+ 
+  // --- Validation ---
+  if (!amount) {
+    const error = new Error("Amount is required");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  const numericAmount = parseFloat(Number(amount).toFixed(2));
+ 
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    const error = new Error("Amount must be a positive number");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  if (numericAmount < 10) {
+    const error = new Error("Minimum deposit amount is R10");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  if (numericAmount > 500000) {
+    const error = new Error("Maximum single deposit amount is R500,000");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  const validChannels = ["App", "ATM", "Internal"];
+  const depositChannel = validChannels.includes(channel) ? channel : "App";
+ 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+ 
+  try {
+    const account = await Account.findOne({ _id: accountId, user }).session(session);
+ 
+    if (!account) {
+      const error = new Error("Account not found");
+      error.statusCode = 404;
+      throw error;
+    }
+ 
+    if (account.status !== "active") {
+      const error = new Error("Cannot deposit into an inactive account");
+      error.statusCode = 400;
+      throw error;
+    }
+ 
+    const transaction = await recordCredit(session, {
+      account,
+      amount: numericAmount,
+      type: "deposit",
+      note: note || "Cash deposit",
+      details: {
+        channel: depositChannel,
+        depositReference: generateReference("DEP"),
+      },
+    });
+ 
+    // Override channel on the transaction record
+    await Transaction.findByIdAndUpdate(
+      transaction._id,
+      { channel: depositChannel },
+      { session }
+    );
+ 
+    await session.commitTransaction();
+    return transaction;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+};
+ 
+/**
+ * Withdraw money from an account
+ * Simulates an ATM or in-branch cash withdrawal
+ */
+export const withdrawFunds = async (user, accountId, data) => {
+  const { amount, note, channel = "App" } = data;
+ 
+  // --- Validation ---
+  if (!amount) {
+    const error = new Error("Amount is required");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  const numericAmount = parseFloat(Number(amount).toFixed(2));
+ 
+  if (isNaN(numericAmount) || numericAmount <= 0) {
+    const error = new Error("Amount must be a positive number");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  if (numericAmount < 50) {
+    const error = new Error("Minimum withdrawal amount is R50");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  // ATM withdrawals are capped at R5,000 per transaction
+  const validChannels = ["App", "ATM", "Internal"];
+  const withdrawChannel = validChannels.includes(channel) ? channel : "App";
+ 
+  if (withdrawChannel === "ATM" && numericAmount > 5000) {
+    const error = new Error("ATM withdrawals are limited to R5,000 per transaction");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  if (numericAmount > 100000) {
+    const error = new Error("Maximum single withdrawal amount is R100,000");
+    error.statusCode = 400;
+    throw error;
+  }
+ 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+ 
+  try {
+    const account = await Account.findOne({ _id: accountId, user }).session(session);
+ 
+    if (!account) {
+      const error = new Error("Account not found");
+      error.statusCode = 404;
+      throw error;
+    }
+ 
+    if (account.status !== "active") {
+      const error = new Error("Cannot withdraw from an inactive account");
+      error.statusCode = 400;
+      throw error;
+    }
+ 
+    if (account.availableBalance < numericAmount) {
+      const error = new Error(
+        `Insufficient funds. Available balance: R${account.availableBalance.toFixed(2)}`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+ 
+    const transaction = await recordDebit(session, {
+      account,
+      amount: numericAmount,
+      type: "withdrawal",
+      note: note || "Cash withdrawal",
+      details: {
+        channel: withdrawChannel,
+        withdrawalReference: generateReference("WDR"),
+      },
+    });
+ 
+    // Override channel on the transaction record
+    await Transaction.findByIdAndUpdate(
+      transaction._id,
+      { channel: withdrawChannel },
+      { session }
+    );
+ 
+    await session.commitTransaction();
+    return transaction;
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
 };
 
 /**
@@ -117,7 +356,7 @@ export const sendCash = async (user, accountId, data) => {
     const transaction = await recordDebit(session, {
       account,
       amount: numericAmount,
-      type: "SendCash",
+      type: "send_cash",
       note: note || `Cash to ${recipientName}`,
       details: {
         recipientName,
@@ -150,7 +389,7 @@ export const getTransactionHistory = async (accountId, user, query = {}) => {
   }
 
   const { page = 1, limit = 20, type, startDate, endDate } = query;
-  const filter = { accountId };
+  const filter = { account: accountId }; // ✅ use 'account'
 
   if (type) filter.type = type;
   if (startDate || endDate) {
@@ -176,6 +415,7 @@ export const getTransactionHistory = async (accountId, user, query = {}) => {
     },
   };
 };
+
 
 /**
  * Purchase airtime or data bundle
@@ -235,7 +475,7 @@ export const purchaseAirtime = async (user, accountId, data) => {
       throw error;
     }
 
-    const txnType = type === "Airtime" ? "AirtimePurchase" : "DataPurchase";
+    const txnType = type === "airtime" ? "AirtimePurchase" : "data";
 
     const transaction = await recordDebit(session, {
       account,
@@ -314,7 +554,7 @@ export const purchaseElectricity = async (user, accountId, data) => {
     const transaction = await recordDebit(session, {
       account,
       amount: numericAmount,
-      type: "ElectricityPurchase",
+      type: "electricity",
       note: `Electricity - Meter ${meterNumber}`,
       details: {
         meterNumber,
