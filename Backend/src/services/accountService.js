@@ -6,6 +6,8 @@ import {
   validatePhoneNumber,
   normalizePhone,
 } from "../utils/validators.js";
+import { ACCOUNT_TYPE_CONFIG } from "../config/accountTypes.js";
+
 
 // GET BALANCE
 export const getUserBalance = async (userId) => {
@@ -105,6 +107,8 @@ export const openAccount = async (userId, data) => {
   const { citizenId, firstName, lastName, phoneNumber, monthlyIncome, accountType } =
     data;
 
+  
+
   // --- Validation ---
   if (!citizenId || !firstName || !lastName || !phoneNumber || !accountType) {
     const error = new Error("All fields are required");
@@ -115,6 +119,7 @@ export const openAccount = async (userId, data) => {
   if (!ACCOUNT_TYPES.includes(accountType)) {
     throw new Error(`Invalid account type. Available types: ${ACCOUNT_TYPES.join(", ")}`);
   }
+  
 
   if (monthlyIncome === undefined || monthlyIncome === null) {
     const error = new Error("Monthly income is required");
@@ -135,10 +140,10 @@ export const openAccount = async (userId, data) => {
   }
 
   // --- Account type eligibility ---
-  const accountConfig = ACCOUNT_TYPES[accountType];
+  const accountConfig = ACCOUNT_TYPE_CONFIG[accountType];
   if (!accountConfig) {
     const error = new Error(
-      `Invalid account type. Available types: ${Object.keys(ACCOUNT_TYPES).join(", ")}`
+      `Invalid account type. Available types: ${Object.keys(ACCOUNT_TYPE_CONFIG).join(", ")}`
     );
     error.statusCode = 400;
     throw error;
@@ -166,7 +171,7 @@ export const openAccount = async (userId, data) => {
   const accountNumber = await Account.generateAccountNumber();
 
   const account = await Account.create({
-    userId,
+    user: userId,
     citizenId,
     firstName: firstName.trim(),
     lastName: lastName.trim(),
@@ -184,8 +189,8 @@ export const openAccount = async (userId, data) => {
   const cvv = Math.floor(100 + Math.random() * 900).toString();
 
   await Card.create({
-    userId,
-    accountId: account._id,
+    user: userId,
+    account: account._id,
     cardholderName: `${firstName.trim()} ${lastName.trim()}`.toUpperCase(),
     cardNumber,
     expiryDate,
@@ -194,8 +199,8 @@ export const openAccount = async (userId, data) => {
 
   // Log account opening activity
   await Activity.create({
-    userId,
-    accountId: account._id,
+    user: userId,
+    account: account._id,
     activityType: "AccountOpened",
     description: `${accountConfig.label} opened`,
     amount: 0,
@@ -211,7 +216,7 @@ export const openAccount = async (userId, data) => {
  * Filtered by what the user's income qualifies for
  */
 export const getAvailableAccountTypes = (monthlyIncome) => {
-  return Object.entries(ACCOUNT_TYPES)
+  return Object.entries(ACCOUNT_TYPE_CONFIG)
     .map(([key, config]) => ({
       type: key,
       label: config.label,

@@ -48,9 +48,18 @@ export const withdraw = async (req, res) => {
 export const getMyAccounts = async (req, res, next) => {
   try {
     const accounts = await getUserAccounts(req.user._id);
+    const enriched = accounts.map(acc => ({
+      ...acc.toObject(),
+      config: ACCOUNT_TYPE_CONFIG[acc.accountType],
+    }));
+
+
     res.status(200).json(accounts);
   } catch (err) {
-    res.status(err.statusCode || 500);
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to retrieve accounts",
+    });
     next(err);
   }
 };
@@ -60,7 +69,10 @@ export const openNewAccount = async (req, res, next) => {
     const account = await openAccount(req.user._id, req.body);
     res.status(201).json(account);
   } catch (err) {
-    res.status(err.statusCode || 500);
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to open account",
+    });
     next(err);
   }
 };
@@ -70,7 +82,10 @@ export const getUserAccountById = async (req, res, next) => {
     const account = await getAccountById(req.params.id, req.user._id);
     res.status(200).json(account);
   } catch (err) {
-    res.status(err.statusCode || 500);
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to retrieve account",
+    });
     next(err);
   }
 };
@@ -81,7 +96,10 @@ export const getAccountTypes = async (req, res, next) => {
     const types = getAvailableAccountTypes(income);
     res.status(200).json(types);
   } catch (err) {
-    res.status(err.statusCode || 500);
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to retrieve account types",
+    });
     next(err);
   }
 };
