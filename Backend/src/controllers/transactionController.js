@@ -67,3 +67,41 @@ export const purchaseElectricity = async (req, res, next) => {
     next(err);
   }
 };
+
+
+export const deposit = async (req, res, next) => {
+  try {
+    const { accountId } = req.params;
+    const transaction = await transactionService.depositFunds(
+      req.user._id,
+      accountId,
+      req.body
+    );
+    res.status(201).json(transaction);
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to deposit funds",
+    });
+    next(err);
+  }
+};
+ 
+export const withdraw = async (req, res, next) => {
+  try {
+    const { accountId } = req.params;
+    const transaction = await transactionService.withdrawFunds(
+      req.user._id,
+      accountId,
+      req.body
+    );
+    res.status(201).json(transaction);
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ 
+        success: false,
+        message: err.message || "Failed to withdraw funds",
+    });
+    next(err);
+  }
+};
+ 
