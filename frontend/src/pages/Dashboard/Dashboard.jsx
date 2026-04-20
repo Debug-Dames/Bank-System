@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { clearTransactions, fetchTransactions } from "../../features/authSlice";
+import { fetchSavingsPlans } from "../../features/savingsSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -48,6 +49,9 @@ export default function Dashboard() {
   const { status: txStatus, items: txItems = [] } = useSelector(
     (state) => state.auth?.transactions || { status: "idle", items: [] }
   );
+  const { plans: savingsPlans = [], status: savingsStatus } = useSelector(
+    (state) => state.savings || { plans: [], status: "idle" }
+  );
 
   const [favorites, setFavorites] = useState(() => {
     const stored = safeParseFavorites(localStorage.getItem(FAVORITES_KEY));
@@ -59,7 +63,10 @@ export default function Dashboard() {
     if (txStatus === "idle") {
       dispatch(fetchTransactions({ accountId: ACCOUNT_ID }));
     }
-  }, [dispatch, txStatus]);
+    if (savingsStatus === "idle") {
+      dispatch(fetchSavingsPlans());
+    }
+  }, [dispatch, txStatus, savingsStatus]);
 
   useEffect(() => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
@@ -250,9 +257,57 @@ export default function Dashboard() {
         <section className="card dashboard-view__full">
           <div className="card__head">
             <h2 className="card__title">Savings Plans</h2>
-            <span className="pill pill--muted">Coming soon</span>
+            <Link to="/savings" className="link">View all</Link>
           </div>
-          <p className="text-muted">No savings plans yet (mock).</p>
+
+          {savingsPlans.length === 0 ? (
+            <div className="savings-overview__empty">
+              <p className="text-muted">No savings plans yet.</p>
+              <Link to="/savings" className="btn btn--primary btn--small">
+                Create your first plan
+              </Link>
+            </div>
+          ) : (
+            <div className="savings-overview">
+              {savingsPlans.slice(0, 2).map((plan) => (
+                <div key={plan._id} className="savings-plan-summary">
+                  <div className="savings-plan-summary__header">
+                    <h4>{plan.name}</h4>
+                    <span className={`status-badge status-${plan.status}`}>
+                      {plan.status}
+                    </span>
+                  </div>
+
+                  <div className="savings-plan-summary__progress">
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${plan.progress}%` }}
+                      />
+                    </div>
+                    <div className="progress-text">
+                      R {plan.currentAmount.toLocaleString()} / R {plan.targetAmount.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="savings-plan-summary__meta">
+                    <span>Due: {new Date(plan.deadline).toLocaleDateString('en-ZA')}</span>
+                    {plan.interestRate > 0 && (
+                      <span>{plan.interestRate}% interest</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {savingsPlans.length > 2 && (
+                <div className="savings-overview__more">
+                  <Link to="/savings" className="link">
+                    +{savingsPlans.length - 2} more plans
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </div>
