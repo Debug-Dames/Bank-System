@@ -67,8 +67,8 @@ cardSchema.index({ cardNumber: 1 }, { unique: true });
 cardSchema.index({ account: 1, status: 1 });
 
 // Hash CVV before saving
-cardSchema.pre("save", async function (next) {
-  if (!this.isModified("cvvHash")) return next();
+cardSchema.pre("save", async function () {
+  if (!this.isModified("cvvHash")) return;
   const salt = await bcrypt.genSalt(10);
   this.cvvHash = await bcrypt.hash(this.cvvHash, salt);
   // next();
