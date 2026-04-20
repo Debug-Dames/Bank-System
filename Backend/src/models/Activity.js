@@ -27,6 +27,9 @@ const activitySchema = new mongoose.Schema(
         "send_cash",
         "deposit",
         "withdrawal",
+        "AccountOpened",
+        "AccountClosed",
+        "CardIssued",
       ],
     },
     amount: {
