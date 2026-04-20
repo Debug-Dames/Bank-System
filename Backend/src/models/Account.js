@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export const ACCOUNT_TYPES = ["transactional", "savings", "current"];
+export const ACCOUNT_TYPES = ["transactional", "savings", "current", "platinum"];
 
 
 const accountSchema = new mongoose.Schema(
@@ -42,7 +42,7 @@ const accountSchema = new mongoose.Schema(
     },
     accountType: {
       type: String,
-      enum: ["transactional", "savings", "current"],
+      enum: ACCOUNT_TYPES,
       default: "transactional",
     },
     monthlyIncome: {
@@ -85,14 +85,20 @@ const accountSchema = new mongoose.Schema(
 accountSchema.index({ accountNumber: 1 }, { unique: true });
 accountSchema.index({ user: 1, status: 1 });
 
-accountSchema.add({
-  accountType: {
-    type: String,
-    enum: ACCOUNT_TYPES,
-    default: "transactional",
-  },
-});
+// In Account.js
 
+accountSchema.statics.generateAccountNumber = async function () {
+  // Example: generate a 10-digit random number
+  let accountNumber;
+  let exists = true;
+
+  while (exists) {
+    accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    exists = await this.findOne({ accountNumber });
+  }
+
+  return accountNumber;
+};
 
 const Account =
   mongoose.models.Account || mongoose.model("Account", accountSchema);
