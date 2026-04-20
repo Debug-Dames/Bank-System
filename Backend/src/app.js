@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
 import accountRoutes from "./routes/accountRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
+import cardRoutes from "./routes/cardRoutes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);
 
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/cards", cardRoutes);
 
 // simple test route
 app.get("/api/test", (req, res) => {
