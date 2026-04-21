@@ -77,6 +77,16 @@ export default function Dashboard() {
     return n.toLocaleString("en-ZA", { maximumFractionDigits: 0 });
   };
 
+  const getPlanProgress = (plan) => {
+    const explicit = Number(plan?.progress);
+    if (Number.isFinite(explicit)) return Math.min(Math.max(explicit, 0), 100);
+
+    const current = Number(plan?.currentAmount);
+    const target = Number(plan?.targetAmount);
+    if (!Number.isFinite(current) || !Number.isFinite(target) || target <= 0) return 0;
+    return Math.min(Math.max((current / target) * 100, 0), 100);
+  };
+
   const recentTransactions = useMemo(() => {
     const list = Array.isArray(txItems) ? txItems : [];
     return list.slice(0, 4);
@@ -117,6 +127,7 @@ export default function Dashboard() {
             <h2 className="card__title">Main Account</h2>
             <span className="pill">Everyday</span>
           </div>
+          
 
           <p className="dashboard-view__balance">
             <span className="dashboard-view__balance-label">Available</span>
@@ -134,6 +145,7 @@ export default function Dashboard() {
             </Link>
           </div>
         </section>
+        
 
         <section className="card">
           <div className="card__head dashboard-favs__head">
@@ -271,31 +283,38 @@ export default function Dashboard() {
             <div className="savings-overview">
               {savingsPlans.slice(0, 2).map((plan) => (
                 <div key={plan._id} className="savings-plan-summary">
-                  <div className="savings-plan-summary__header">
-                    <h4>{plan.name}</h4>
-                    <span className={`status-badge status-${plan.status}`}>
-                      {plan.status}
-                    </span>
-                  </div>
+                  {(() => {
+                    const progress = getPlanProgress(plan);
+                    const currentAmount = Number(plan?.currentAmount ?? 0);
+                    const targetAmount = Number(plan?.targetAmount ?? 0);
+                    return (
+                      <>
+                        <div className="savings-plan-summary__header">
+                          <h4>{plan.name}</h4>
+                          <span className={`status-badge status-${plan.status}`}>
+                            {plan.status}
+                          </span>
+                        </div>
 
-                  <div className="savings-plan-summary__progress">
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{ width: `${plan.progress}%` }}
-                      />
-                    </div>
-                    <div className="progress-text">
-                      R {plan.currentAmount.toLocaleString()} / R {plan.targetAmount.toLocaleString()}
-                    </div>
-                  </div>
+                        <div className="savings-plan-summary__progress">
+                          <div className="progress-bar">
+                            <div
+                              className="progress-fill"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="progress-text">
+                            R {currentAmount.toLocaleString("en-ZA")} / R{" "}
+                            {targetAmount.toLocaleString("en-ZA")}
+                          </div>
+                        </div>
 
-                  <div className="savings-plan-summary__meta">
-                    <span>Due: {new Date(plan.deadline).toLocaleDateString('en-ZA')}</span>
-                    {plan.interestRate > 0 && (
-                      <span>{plan.interestRate}% interest</span>
-                    )}
-                  </div>
+                        <div className="savings-plan-summary__meta">
+                          <span>Due: {new Date(plan.deadline).toLocaleDateString('en-ZA')}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
 

@@ -46,6 +46,7 @@ export default function Withdraw() {
 
   const { status, error, lastTransaction } = useSelector((s) => s.withdraw);
   const { balance } = useSelector((s) => s.auth);
+  const { savingsBalance } = useSelector((s) => s.savings);
 
   const [selectedAccount, setSelectedAccount] = useState("");
   const [showBalance, setShowBalance] = useState(false);
@@ -75,7 +76,8 @@ export default function Withdraw() {
   }, [status]);
 
   const numericAmount = parseFloat(amount) || 0;
-  const availableBalance = balance ?? 0;
+  const availableBalance =
+    selectedAccount === "acc_002" ? (savingsBalance ?? 0) : (balance ?? 0);
   const balanceAfterPreview = availableBalance - numericAmount;
 
   const showPreview =

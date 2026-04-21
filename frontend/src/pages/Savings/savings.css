@@ -1,315 +1,171 @@
-/* ============================================================
-   Savings Plans — pages/Savings/savings.css
-   ============================================================ */
-
-.savings-plans {
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
+/* ── Form Inputs (match Withdraw style) ───────────────────── */
 .savings-plans__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.page-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-extrabold);
-  color: var(--text-primary);
-  letter-spacing: var(--tracking-tight);
-}
-
-.savings-plans__create-form {
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
-  border: 1px solid var(--stroke-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-card);
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* Inner radial glow */
-.savings-plans__create-form::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: calc(var(--radius-lg) + 2px);
-  background: radial-gradient(600px 140px at 15% 0%, rgba(195, 160, 51, 0.18), transparent 60%);
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.savings-plans__create-form > * {
-  position: relative;
-  z-index: 1;
-}
-
-.savings-plans__create-form h2 {
-  margin: 0 0 var(--space-5) 0;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-}
-
-.form-row {
+.savings-account__balances {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.form-row .form-group {
-  margin-bottom: 0;
-}
-
-.form-actions {
+.balance-item {
   display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
-  justify-content: flex-end;
-}
-
-.savings-plans__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: var(--space-5);
-}
-
-.savings-plans__empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: var(--space-8);
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--stroke-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: rgba(0, 0, 0, 0.18);
 }
 
-.savings-plans__empty h3 {
-  margin: 0 0 var(--space-3) 0;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
-}
-
-.savings-plans__empty p {
+.balance-item .label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
   color: var(--text-muted);
-  margin-bottom: var(--space-5);
-  font-size: var(--text-base);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.savings-plan-card {
-  background: linear-gradient(180deg, rgba(28, 28, 28, 0.58), rgba(11, 11, 11, 0.44));
-  border: 1px solid var(--stroke-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-card);
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-/* Inner radial glow */
-.savings-plan-card::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: calc(var(--radius-lg) + 2px);
-  background: radial-gradient(600px 140px at 15% 0%, rgba(195, 160, 51, 0.18), transparent 60%);
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.savings-plan-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-app);
-}
-
-.savings-plan-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.savings-plan-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-3);
-}
-
-.savings-plan-card__header h3 {
-  margin: 0;
-  font-family: var(--font-display);
+.balance-item .value {
   font-size: var(--text-lg);
   font-weight: var(--font-bold);
   color: var(--text-primary);
 }
 
-.status-badge {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  text-transform: capitalize;
-  letter-spacing: var(--tracking-normal);
+.savings-account__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.status-active {
-  background-color: var(--color-success-bg);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+.savings-transfer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
 }
 
-.status-completed {
-  background-color: var(--color-success-bg);
-  color: var(--color-success);
-  border: 1px solid var(--color-success-border);
+.savings-transfer .form-group {
+  margin: 0;
 }
 
-.status-paused {
-  background-color: var(--color-warning-bg);
-  color: var(--color-warning);
-  border: 1px solid var(--color-warning-border);
+.savings-transfer button {
+  height: 42px;
+  white-space: nowrap;
 }
 
-.status-cancelled {
-  background-color: var(--color-error-bg);
-  color: var(--color-error);
-  border: 1px solid var(--color-error-border);
+.savings-transfer button::after {
+  content: none;
 }
 
-.savings-plan-card__description {
-  color: var(--text-muted);
-  margin-bottom: var(--space-4);
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
-}
-
-.savings-plan-card__progress {
-  margin-bottom: var(--space-4);
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: var(--stroke-subtle);
-  border-radius: var(--radius-full);
-  margin-bottom: var(--space-2);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--gradient-gold);
-  border-radius: var(--radius-full);
-  transition: width var(--transition-base);
-}
-
-.progress-text {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: center;
-  font-weight: var(--font-medium);
-}
-
-.savings-plan-card__details {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
-  font-size: var(--text-sm);
-  gap: var(--space-3);
-}
-
-.detail-item {
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  flex: 1;
+  gap: 6px;
 }
 
-.detail-item .label {
-  color: var(--text-muted);
-  font-weight: var(--font-medium);
+.form-group label {
   font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-}
-
-.detail-item .value {
-  color: var(--text-primary);
   font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.savings-plan-card__actions {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.add-money-form {
+/* Input fields */
+.form-input,
+.form-group input,
+.form-group textarea {
   width: 100%;
-  margin-bottom: var(--space-3);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
+
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
+
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
 }
 
-.add-money-buttons {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: flex-end;
+/* Placeholder */
+.form-input::placeholder,
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .savings-plans {
-    padding: var(--space-4);
-  }
+/* Focus (gold glow like Withdraw) */
+.form-input:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: rgba(234, 208, 122, 0.45);
+  box-shadow: 0 0 0 2px rgba(234, 208, 122, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+}
 
-  .savings-plans__header {
-    flex-direction: column;
-    gap: var(--space-3);
-    align-items: stretch;
-  }
+/* Date input icon fix (dark mode) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+}
 
-  .savings-plans__grid {
-    grid-template-columns: 1fr;
-  }
+/* ── Buttons (match shimmer style) ───────────────────────── */
+.form-actions button {
+  position: relative;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-subtle);
 
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-primary);
 
-  .savings-plan-card__details {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
+  font-weight: var(--font-semibold);
+  cursor: pointer;
 
-  .savings-plan-card__actions {
-    flex-direction: column;
-  }
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
 
-  .add-money-buttons {
-    flex-direction: column;
-  }
+/* Primary button (Create Plan) */
+.form-actions button:first-child {
+  background: linear-gradient(
+    180deg,
+    rgba(234, 208, 122, 0.95),
+    rgba(195, 160, 51, 0.95)
+  );
+  color: #111;
+  border: none;
+}
 
-  .form-actions {
-    flex-direction: column;
-  }
+/* Hover */
+.form-actions button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(234, 208, 122, 0.3);
+}
+
+/* Shimmer effect */
+.form-actions button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.2),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
 }

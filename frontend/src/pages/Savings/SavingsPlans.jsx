@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSavingsPlans,
   createSavingsPlan,
-  addToSavingsPlan,
-  updateSavingsPlan,
+  depositToSavings,
+  depositToSavingsPlan,
+  withdrawFromSavings,
+  withdrawFromSavingsPlan,
   deleteSavingsPlan,
-  resetSavingsError,
   clearLastAction
 } from "../../features/savingsSlice";
 import Button from "../../components/ui/Button";
@@ -22,12 +23,25 @@ import "./savings.css";
 
 export default function SavingsPlans() {
   const dispatch = useDispatch();
-  const { plans, status, error, lastAction } = useSelector((state) => state.savings);
+  const {
+    plans,
+    status,
+    error,
+    lastPlanAction,
+    savingsBalance,
+    transferStatus,
+    transferError,
+    lastTransferAction,
+    lastTransferPlanId
+  } = useSelector((state) => state.savings);
   const { balance } = useSelector((state) => state.auth);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [addAmount, setAddAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [planTransferAction, setPlanTransferAction] = useState(null); // 'deposit' | 'withdraw'
+  const [planTransferAmount, setPlanTransferAmount] = useState("");
 
   // Create form state
   const [newPlan, setNewPlan] = useState({
@@ -35,7 +49,6 @@ export default function SavingsPlans() {
     description: "",
     targetAmount: "",
     deadline: "",
-    interestRate: "0"
   });
 
   useEffect(() => {
@@ -43,13 +56,13 @@ export default function SavingsPlans() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (lastAction) {
+    if (lastPlanAction || lastTransferAction) {
       const timer = setTimeout(() => {
         dispatch(clearLastAction());
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [lastAction, dispatch]);
+  }, [lastPlanAction, lastTransferAction, dispatch]);
 
   const handleCreatePlan = async (e) => {
     e.preventDefault();
@@ -57,7 +70,6 @@ export default function SavingsPlans() {
     const planData = {
       ...newPlan,
       targetAmount: parseFloat(newPlan.targetAmount),
-      interestRate: parseFloat(newPlan.interestRate) || 0
     };
 
     try {
@@ -67,23 +79,28 @@ export default function SavingsPlans() {
         description: "",
         targetAmount: "",
         deadline: "",
-        interestRate: "0"
       });
       setShowCreateForm(false);
-    } catch (error) {
+    } catch {
       // Error is handled in the slice
     }
   };
 
-  const handleAddToPlan = async (planId) => {
-    const amount = parseFloat(addAmount);
+  const handlePlanTransfer = async () => {
+    const amount = parseFloat(planTransferAmount);
+    if (!selectedPlan || !planTransferAction) return;
     if (!amount || amount <= 0) return;
 
     try {
-      await dispatch(addToSavingsPlan({ planId, amount })).unwrap();
-      setAddAmount("");
+      if (planTransferAction === "deposit") {
+        await dispatch(depositToSavingsPlan({ planId: selectedPlan, amount })).unwrap();
+      } else {
+        await dispatch(withdrawFromSavingsPlan({ planId: selectedPlan, amount })).unwrap();
+      }
+      setPlanTransferAmount("");
       setSelectedPlan(null);
-    } catch (error) {
+      setPlanTransferAction(null);
+    } catch {
       // Error is handled in the slice
     }
   };
@@ -92,9 +109,33 @@ export default function SavingsPlans() {
     if (window.confirm("Are you sure you want to delete this savings plan?")) {
       try {
         await dispatch(deleteSavingsPlan(planId)).unwrap();
-      } catch (error) {
+      } catch {
         // Error is handled in the slice
       }
+    }
+  };
+
+  const handleDepositToSavings = async () => {
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) return;
+
+    try {
+      await dispatch(depositToSavings({ amount })).unwrap();
+      setDepositAmount("");
+    } catch {
+      // Error is handled in the slice
+    }
+  };
+
+  const handleWithdrawFromSavings = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) return;
+
+    try {
+      await dispatch(withdrawFromSavings({ amount })).unwrap();
+      setWithdrawAmount("");
+    } catch {
+      // Error is handled in the slice
     }
   };
 
@@ -119,27 +160,109 @@ export default function SavingsPlans() {
     }
   };
 
+  const getPlanProgress = (plan) => {
+    const explicit = Number(plan?.progress);
+    if (Number.isFinite(explicit)) return Math.min(Math.max(explicit, 0), 100);
+
+    const current = Number(plan?.currentAmount);
+    const target = Number(plan?.targetAmount);
+    if (!Number.isFinite(current) || !Number.isFinite(target) || target <= 0) return 0;
+    return Math.min(Math.max((current / target) * 100, 0), 100);
+  };
+
   const isLoading = status === 'loading';
+  const isTransferLoading = transferStatus === "loading";
+  const lastTransferPlanName =
+    lastTransferPlanId ? (plans.find((p) => p?._id === lastTransferPlanId)?.name || "plan") : null;
 
   return (
     <div className="savings-plans">
       <div className="savings-plans__header">
         <h1 className="page-title">Savings Plans</h1>
         <Button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          variant="primary"
-          disabled={isLoading}
+          onClick={() => setShowCreateForm((prev) => !prev)}
+          variant={showCreateForm ? "secondary" : "primary"}
         >
-          {showCreateForm ? 'Cancel' : 'Create New Plan'}
+          {showCreateForm ? "Close" : "Create Plan"}
         </Button>
       </div>
+
+      <Card className="savings-account">
+        <div className="savings-account__balances">
+          
+          <div className="balance-item">
+            <span className="label">Savings Balance</span>
+            <span className="value">{formatCurrency(savingsBalance)}</span>
+          </div>
+        </div>
+
+        <div className="savings-account__actions">
+          <div className="savings-transfer">
+            <Input
+              label="Deposit to Savings (ZAR)"
+              type="number"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              placeholder="200"
+              min="0"
+              step="0.01"
+            />
+            <Button
+              onClick={handleDepositToSavings}
+              variant="primary"
+              disabled={isTransferLoading || !depositAmount || parseFloat(depositAmount) <= 0}
+            >
+              {isTransferLoading ? "Processing..." : "Deposit"}
+            </Button>
+          </div>
+
+          <div className="savings-transfer">
+            <Input
+              label="Withdraw from Savings (ZAR)"
+              type="number"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              placeholder="100"
+              min="0"
+              step="0.01"
+            />
+            <Button
+              onClick={handleWithdrawFromSavings}
+              variant="secondary"
+              disabled={isTransferLoading || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
+            >
+              {isTransferLoading ? "Processing..." : "Withdraw"}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {error && (
         <Alert variant="error">{error}</Alert>
       )}
 
-      {lastAction && (
-        <Alert variant="success">Savings plan {lastAction}d successfully!</Alert>
+      {transferError && (
+        <Alert variant="error">{transferError}</Alert>
+      )}
+
+      {lastTransferAction && (
+        <Alert variant="success">
+          {lastTransferAction === "transfer_deposit"
+            ? "Transfer to savings successful!"
+            : lastTransferAction === "transfer_withdraw"
+              ? "Transfer from savings successful!"
+              : lastTransferAction === "account_deposit"
+                ? "Savings account deposit successful!"
+                : lastTransferAction === "account_withdraw"
+                  ? "Savings account withdrawal successful!"
+                  : lastTransferAction === "deposit_plan"
+                    ? `Deposited into ${lastTransferPlanName}.`
+                    : `Withdrew from ${lastTransferPlanName}.`}
+        </Alert>
+      )}
+
+      {lastPlanAction && (
+        <Alert variant="success">Savings plan {lastPlanAction}d successfully!</Alert>
       )}
 
       {showCreateForm && (
@@ -174,15 +297,6 @@ export default function SavingsPlans() {
                 value={newPlan.deadline}
                 onChange={(e) => setNewPlan({...newPlan, deadline: e.target.value})}
                 required
-              />
-              <Input
-                label="Interest Rate (%)"
-                type="number"
-                value={newPlan.interestRate}
-                onChange={(e) => setNewPlan({...newPlan, interestRate: e.target.value})}
-                placeholder="2.5"
-                min="0"
-                step="0.1"
               />
             </div>
 
@@ -225,95 +339,122 @@ export default function SavingsPlans() {
         ) : (
           plans.map((plan) => (
             <Card key={plan._id} className="savings-plan-card">
-              <div className="savings-plan-card__header">
-                <h3>{plan.name}</h3>
-                <span className={`status-badge status-${getStatusColor(plan.status)}`}>
-                  {plan.status}
-                </span>
-              </div>
+              {(() => {
+                const progress = getPlanProgress(plan);
+                return (
+                  <>
+                    <div className="savings-plan-card__header">
+                      <h3>{plan.name}</h3>
+                      <span className={`status-badge status-${getStatusColor(plan.status)}`}>
+                        {plan.status}
+                      </span>
+                    </div>
 
-              {plan.description && (
-                <p className="savings-plan-card__description">{plan.description}</p>
-              )}
+                    {plan.description && (
+                      <p className="savings-plan-card__description">{plan.description}</p>
+                    )}
 
-              <div className="savings-plan-card__progress">
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${plan.progress}%` }}
-                  />
-                </div>
-                <div className="progress-text">
-                  {formatCurrency(plan.currentAmount)} / {formatCurrency(plan.targetAmount)}
-                  ({plan.progress.toFixed(1)}%)
-                </div>
-              </div>
-
-              <div className="savings-plan-card__details">
-                <div className="detail-item">
-                  <span className="label">Deadline:</span>
-                  <span className="value">{formatDate(plan.deadline)}</span>
-                </div>
-                {plan.interestRate > 0 && (
-                  <div className="detail-item">
-                    <span className="label">Interest Rate:</span>
-                    <span className="value">{plan.interestRate}%</span>
-                  </div>
-                )}
-              </div>
-
-              {plan.status === 'active' && (
-                <div className="savings-plan-card__actions">
-                  {selectedPlan === plan._id ? (
-                    <div className="add-money-form">
-                      <Input
-                        type="number"
-                        value={addAmount}
-                        onChange={(e) => setAddAmount(e.target.value)}
-                        placeholder="Amount to add"
-                        min="0"
-                        step="0.01"
-                      />
-                      <div className="add-money-buttons">
-                        <Button
-                          onClick={() => handleAddToPlan(plan._id)}
-                          variant="primary"
-                          size="small"
-                          disabled={!addAmount || parseFloat(addAmount) <= 0}
-                        >
-                          Add
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setSelectedPlan(null);
-                            setAddAmount("");
-                          }}
-                          variant="secondary"
-                          size="small"
-                        >
-                          Cancel
-                        </Button>
+                    <div className="savings-plan-card__progress">
+                      <div className="progress-bar">
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <div className="progress-text">
+                        {formatCurrency(plan.currentAmount)} / {formatCurrency(plan.targetAmount)}
+                        ({progress.toFixed(1)}%)
                       </div>
                     </div>
-                  ) : (
-                    <Button
-                      onClick={() => setSelectedPlan(plan._id)}
-                      variant="primary"
-                      size="small"
-                    >
-                      Add Money
-                    </Button>
-                  )}
 
-                  <Button
-                    onClick={() => handleDeletePlan(plan._id)}
-                    variant="danger"
-                    size="small"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              )}
+                    <div className="savings-plan-card__details">
+                    <div className="detail-item">
+                      <span className="label">Deadline:</span>
+                      <span className="value">{formatDate(plan.deadline)}</span>
+                    </div>
+                  </div>
+
+                  {plan.status === 'active' && (
+                      <div className="savings-plan-card__actions">
+                        {selectedPlan === plan._id ? (
+                          <div className="add-money-form">
+                            <Input
+                              type="number"
+                              value={planTransferAmount}
+                              onChange={(e) => setPlanTransferAmount(e.target.value)}
+                              placeholder={planTransferAction === "withdraw" ? "Amount to withdraw" : "Amount to deposit"}
+                              min="0"
+                              step="0.01"
+                            />
+                            <div className="add-money-buttons">
+                              <Button
+                                onClick={handlePlanTransfer}
+                                variant="primary"
+                                size="small"
+                                disabled={
+                                  isTransferLoading ||
+                                  !planTransferAmount ||
+                                  parseFloat(planTransferAmount) <= 0 ||
+                                  (planTransferAction === "deposit" &&
+                                    parseFloat(planTransferAmount) > Number(balance ?? 0)) ||
+                                  (planTransferAction === "withdraw" &&
+                                    parseFloat(planTransferAmount) > Number(plan?.currentAmount ?? 0))
+                                }
+                              >
+                                {planTransferAction === "withdraw" ? "Withdraw" : "Deposit"}
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  setSelectedPlan(null);
+                                  setPlanTransferAmount("");
+                                  setPlanTransferAction(null);
+                                }}
+                                variant="secondary"
+                                size="small"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => {
+                                setSelectedPlan(plan._id);
+                                setPlanTransferAction("deposit");
+                              }}
+                              variant="primary"
+                              size="small"
+                              disabled={isTransferLoading}
+                            >
+                              Deposit
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setSelectedPlan(plan._id);
+                                setPlanTransferAction("withdraw");
+                              }}
+                              variant="secondary"
+                              size="small"
+                              disabled={isTransferLoading}
+                            >
+                              Withdraw
+                            </Button>
+                          </>
+                        )}
+
+                        <Button
+                          onClick={() => handleDeletePlan(plan._id)}
+                          variant="danger"
+                          size="small"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </Card>
           ))
         )}
