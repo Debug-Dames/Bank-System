@@ -184,11 +184,10 @@ The backend exposes a REST API at `http://localhost:5000/api`. All protected rou
 
 | Type | Min Monthly Income | Description |
 |---|---|---|
-| Cheque | R0 | Standard everyday banking |
+| Transactional | R0 | Standard everyday banking |
 | Savings | R0 | Interest-bearing savings account |
-| Business | R5,000 | Business banking with multi-signatory support |
-| Gold | R8,000 | Premium — travel insurance, priority support |
-| Platinum | R25,000 | Elite — airport lounge, dedicated banker |
+| Current | R5,000 | Business banking with multi-signatory support |
+| Platinum | R20,000 | Elite — airport lounge, dedicated banker |
 
 ---
 
