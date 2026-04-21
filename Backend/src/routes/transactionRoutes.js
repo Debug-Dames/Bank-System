@@ -1,8 +1,8 @@
 import express from "express";
 import { authMiddleware }from "../middleware/authMiddleware.js";
 import {
-  // deposit,
-  // withdraw,
+  deposit,
+  withdraw,
   sendCash,
   getTransactionHistory,
   purchaseAirtime,
@@ -11,8 +11,12 @@ import {
 
 const router = express.Router();
 
-// router.post("/deposit", authMiddleware, deposit);
-// router.post("/withdraw", authMiddleware, withdraw);
+
+// POST /api/transactions/:accountId/deposit
+router.post("/:accountId/deposit", authMiddleware, deposit);
+ 
+// POST /api/transactions/:accountId/withdraw
+router.post("/:accountId/withdraw", authMiddleware, withdraw);
 
 // POST /api/transactions/:accountId/send-cash
 router.post("/:accountId/send-cash", authMiddleware, sendCash);
