@@ -65,4 +65,4 @@ jobs:
       # 10. (Optional) Deploy to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          echo "Deploy step here (kubectl apply -f k8s/)"
+          echo "Deploy step here (kubectl apply -f k8s/)
