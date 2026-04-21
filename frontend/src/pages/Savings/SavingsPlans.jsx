@@ -197,43 +197,9 @@ export default function SavingsPlans() {
         </div>
 
         <div className="savings-account__actions">
-          <div className="savings-transfer">
-            <Input
-              label="Deposit to Savings (ZAR)"
-              type="number"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              placeholder="200"
-              min="0"
-              step="0.01"
-            />
-            <Button
-              onClick={handleDepositToSavings}
-              variant="primary"
-              disabled={isTransferLoading || !depositAmount || parseFloat(depositAmount) <= 0}
-            >
-              {isTransferLoading ? "Processing..." : "Deposit"}
-            </Button>
-          </div>
+          
 
-          <div className="savings-transfer">
-            <Input
-              label="Withdraw from Savings (ZAR)"
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="100"
-              min="0"
-              step="0.01"
-            />
-            <Button
-              onClick={handleWithdrawFromSavings}
-              variant="secondary"
-              disabled={isTransferLoading || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
-            >
-              {isTransferLoading ? "Processing..." : "Withdraw"}
-            </Button>
-          </div>
+          
         </div>
       </Card>
 
