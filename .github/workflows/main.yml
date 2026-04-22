@@ -71,5 +71,5 @@ jobs:
       # 13. Deploy (placeholder)
       - name: Deploy to Kubernetes
         run: echo "kubectl apply -f k8s/"
-        run: echo "kubectl apply -f k8s/"
+    
         
