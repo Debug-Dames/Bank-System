@@ -1,26 +1,19 @@
-name: Full CI/CD Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js (FIXED VERSION)
+      # 2. Setup Node.js
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 3. Install backend dependencies (FIXED: capital B)
+      # 3. Install backend dependencies
       - name: Install backend dependencies
         run: |
           cd Backend
@@ -32,7 +25,7 @@ jobs:
           cd frontend
           npm install
 
-      # 5. Build frontend (Vite works now)
+      # 5. Build frontend
       - name: Build frontend
         run: |
           cd frontend
@@ -44,7 +37,7 @@ jobs:
           cd Backend
           npm test || echo "No tests found"
 
-      # 7. Build Docker images (FIXED TAG + PATH)
+      # 7. Build Docker images
       - name: Build backend Docker image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/backend ./Backend
 
