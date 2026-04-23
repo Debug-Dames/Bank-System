@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { clearTransactions, fetchTransactions } from "../../features/authSlice";
+import { fetchSavingsPlans } from "../../features/savingsSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -48,6 +49,9 @@ export default function Dashboard() {
   const { status: txStatus, items: txItems = [] } = useSelector(
     (state) => state.auth?.transactions || { status: "idle", items: [] }
   );
+  const { plans: savingsPlans = [], status: savingsStatus } = useSelector(
+    (state) => state.savings || { plans: [], status: "idle" }
+  );
 
   const [favorites, setFavorites] = useState(() => {
     const stored = safeParseFavorites(localStorage.getItem(FAVORITES_KEY));
@@ -59,7 +63,10 @@ export default function Dashboard() {
     if (txStatus === "idle") {
       dispatch(fetchTransactions({ accountId: ACCOUNT_ID }));
     }
-  }, [dispatch, txStatus]);
+    if (savingsStatus === "idle") {
+      dispatch(fetchSavingsPlans());
+    }
+  }, [dispatch, txStatus, savingsStatus]);
 
   useEffect(() => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
@@ -68,6 +75,16 @@ export default function Dashboard() {
   const formatMoney = (amount) => {
     const n = Number(amount ?? 0);
     return n.toLocaleString("en-ZA", { maximumFractionDigits: 0 });
+  };
+
+  const getPlanProgress = (plan) => {
+    const explicit = Number(plan?.progress);
+    if (Number.isFinite(explicit)) return Math.min(Math.max(explicit, 0), 100);
+
+    const current = Number(plan?.currentAmount);
+    const target = Number(plan?.targetAmount);
+    if (!Number.isFinite(current) || !Number.isFinite(target) || target <= 0) return 0;
+    return Math.min(Math.max((current / target) * 100, 0), 100);
   };
 
   const recentTransactions = useMemo(() => {
@@ -110,6 +127,7 @@ export default function Dashboard() {
             <h2 className="card__title">Main Account</h2>
             <span className="pill">Everyday</span>
           </div>
+          
 
           <p className="dashboard-view__balance">
             <span className="dashboard-view__balance-label">Available</span>
@@ -127,6 +145,7 @@ export default function Dashboard() {
             </Link>
           </div>
         </section>
+        
 
         <section className="card">
           <div className="card__head dashboard-favs__head">
@@ -250,9 +269,64 @@ export default function Dashboard() {
         <section className="card dashboard-view__full">
           <div className="card__head">
             <h2 className="card__title">Savings Plans</h2>
-            <span className="pill pill--muted">Coming soon</span>
+            <Link to="/savings" className="link">View all</Link>
           </div>
-          <p className="text-muted">No savings plans yet (mock).</p>
+
+          {savingsPlans.length === 0 ? (
+            <div className="savings-overview__empty">
+              <p className="text-muted">No savings plans yet.</p>
+              <Link to="/savings" className="btn btn--primary btn--small">
+                Create your first plan
+              </Link>
+            </div>
+          ) : (
+            <div className="savings-overview">
+              {savingsPlans.slice(0, 2).map((plan) => (
+                <div key={plan._id} className="savings-plan-summary">
+                  {(() => {
+                    const progress = getPlanProgress(plan);
+                    const currentAmount = Number(plan?.currentAmount ?? 0);
+                    const targetAmount = Number(plan?.targetAmount ?? 0);
+                    return (
+                      <>
+                        <div className="savings-plan-summary__header">
+                          <h4>{plan.name}</h4>
+                          <span className={`status-badge status-${plan.status}`}>
+                            {plan.status}
+                          </span>
+                        </div>
+
+                        <div className="savings-plan-summary__progress">
+                          <div className="progress-bar">
+                            <div
+                              className="progress-fill"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="progress-text">
+                            R {currentAmount.toLocaleString("en-ZA")} / R{" "}
+                            {targetAmount.toLocaleString("en-ZA")}
+                          </div>
+                        </div>
+
+                        <div className="savings-plan-summary__meta">
+                          <span>Due: {new Date(plan.deadline).toLocaleDateString('en-ZA')}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+
+              {savingsPlans.length > 2 && (
+                <div className="savings-overview__more">
+                  <Link to="/savings" className="link">
+                    +{savingsPlans.length - 2} more plans
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </div>

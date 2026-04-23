@@ -62,7 +62,6 @@ const authSlice = createSlice({
     account: mockAccount,
     balance: 0,
     cards: mockCards,
-    savingsPlans: mockSavingsPlans,
     transactions: {
       status: "idle",
       error: null,
