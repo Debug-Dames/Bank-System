@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { depositFunds } from "../service/mockApi";
 import { prependTransaction, setBalance } from "./authSlice";
+import { depositToSavingsAccount } from "./savingsSlice";
 
 // =========================
 // ASYNC THUNK (API CALL)
@@ -9,12 +10,17 @@ export const depositAsync = createAsyncThunk(
   "deposit/depositAsync",
   async (payload, { dispatch, rejectWithValue }) => {
     try {
+      if (payload?.accountId === "acc_002") {
+        const result = await dispatch(depositToSavingsAccount({ amount: payload.amount })).unwrap();
+        return result.transaction;
+      }
+
       const response = await depositFunds(payload);
       dispatch(setBalance(response.balanceAfter));
       dispatch(prependTransaction(response));
       return response;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error?.message || String(error));
     }
   }
 );

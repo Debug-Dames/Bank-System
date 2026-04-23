@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: maps22/backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: NODE_ENV
+              value: "development"
+
+            - name: PORT
+              value: "5000"
+
+            - name: API_PREFIX
+              value: "/api"
+
+            - name: MONGO_URI
+              value: "mongodb://capazee29_db_user:dP9VhGhcS7yY70QhGhcS7yY70Qh@ac-b1bs3tj-shard-00-00.lyobkpn.mongodb.net:27017,ac-b1bs3tj-shard-00-01.lyobkpn.mongodb.net:27017,ac-b1bs3tj-shard-00-02.lyobkpn.mongodb.net:27017/novabankdb?ssl=true&authSource=admin&replicaSet=atlas-lp0x2g-shard-0&retryWrites=true&w=majority"
+
+            - name: JWT_SECRET
+              value: "your-secret"
+
+            - name: CORS_ORIGIN
+              value: "http://localhost:5173"
