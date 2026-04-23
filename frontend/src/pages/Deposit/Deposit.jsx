@@ -19,6 +19,7 @@ export default function Deposit() {
   const dispatch = useDispatch();
   const { status, error, lastTransaction } = useSelector((state) => state.deposit);
   const { balance } = useSelector((s) => s.auth);
+  const { savingsBalance } = useSelector((s) => s.savings);
 
   const [selectedAccount, setSelectedAccount] = useState("");
   const [showBalance, setShowBalance] = useState(false);
@@ -29,7 +30,8 @@ export default function Deposit() {
 
   const isLoading = status === "loading";
   const numericAmount = parseFloat(amount) || 0;
-  const availableBalance = balance ?? 0;
+  const availableBalance =
+    selectedAccount === "acc_002" ? (savingsBalance ?? 0) : (balance ?? 0);
 
   // Reset on unmount
   useEffect(() => {
