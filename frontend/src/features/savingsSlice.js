@@ -1,35 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { prependTransaction, setBalance } from "./authSlice";
 
-// Mock savings plans data (in-memory store for Sprint 1)
-let savingsPlansStore = [
-  {
-    _id: "plan_001",
-    user: "user_001",
-    name: "Emergency Fund",
-    description: "Building a 3-month emergency fund",
-    targetAmount: 15000,
-    currentAmount: 4500,
-    deadline: "2026-12-31T00:00:00.000Z",
-    status: "active",
-    progress: 30,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-04-15T00:00:00.000Z",
-  },
-  {
-    _id: "plan_002",
-    user: "user_001",
-    name: "Vacation Fund",
-    description: "Saving for summer vacation",
-    targetAmount: 8000,
-    currentAmount: 3200,
-    deadline: "2026-06-30T00:00:00.000Z",
-    status: "active",
-    progress: 40,
-    createdAt: "2026-02-01T00:00:00.000Z",
-    updatedAt: "2026-04-10T00:00:00.000Z",
-  },
-];
+// In-memory store (starts empty; populated via createSavingsPlan)
+let savingsPlansStore = [];
 
 function clonePlan(plan) {
   return plan ? { ...plan } : plan;

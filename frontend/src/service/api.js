@@ -92,15 +92,16 @@ export const withdrawAPI = async (data) => {
 // ======================== SAVINGS ========================
 //
 
-export const getSavingsAPI = async () => {
-  const res = await fetch(`${API_URL}/savings`, {
-    method: "GET",
+export const createSavingsAPI = async (data) => {
+  const res = await fetch(`${API_URL}/savings/create`, {
+    method: "POST",
     headers: getHeaders(),
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to fetch savings");
+    const error = await res.json();
+    throw new Error(error.message || "Failed to create savings");
   }
 
   return res.json();

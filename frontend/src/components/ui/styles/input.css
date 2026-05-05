@@ -59,7 +59,8 @@
 .input-suffix { border-right: none; border-left: 1px solid var(--stroke-subtle); }
 
 /* ── Field ────────────────────────────────────────────────── */
-.form-input {
+.form-input,
+.form-input--standalone {
   flex: 1;
   width: 100%;
   padding: 10px 12px;
@@ -78,31 +79,45 @@
 }
 
 /* When inside a wrapper, strip the standalone styles */
-.input-wrapper .form-input {
+.input-wrapper .form-input,
+.input-wrapper .form-input--standalone {
   border: none;
   border-radius: 0;
   background: transparent;
   padding: 10px 12px;
 }
 
-.form-input:focus {
+.form-input:focus,
+.form-input--standalone:focus {
   border-color: var(--stroke-focus);
   box-shadow: 0 0 0 4px rgba(234, 208, 122, 0.16);
   transform: translateY(-1px);
 }
 
-.input-wrapper .form-input:focus {
+.input-wrapper .form-input:focus,
+.input-wrapper .form-input--standalone:focus {
   box-shadow: none;
   transform: none;
 }
 
-.form-input::placeholder {
+.form-input::placeholder,
+.form-input--standalone::placeholder {
   color: rgba(255, 250, 235, 0.28);
 }
 
-.form-input:disabled {
+.form-input:disabled,
+.form-input--standalone:disabled {
   opacity: 0.40;
   cursor: not-allowed;
+}
+
+.form-input--error {
+  border-color: var(--color-error-border);
+}
+
+.form-input--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 4px var(--color-error-bg);
 }
 
 /* ── Helper ───────────────────────────────────────────────── */
