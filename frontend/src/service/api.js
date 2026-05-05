@@ -1,38 +1,23 @@
-import axios from "axios";
+import api, { setAuthToken, clearAuthToken } from "./api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+export async function loginUser(credentials) {
+  const data = await api.post("/auth/login", credentials);
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export function setAuthToken(token) {
-  if (token) {
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common.Authorization;
+  if (data?.token) {
+    setAuthToken(data.token);
   }
+
+  return data;
 }
 
-export function clearAuthToken() {
-  setAuthToken(null);
+export async function registerUser(payload) {
+  return api.post("/auth/register", payload);
 }
 
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      "Request failed";
+export async function getProfile() {
+  return api.get("/auth/me");
+}
 
-    return Promise.reject(new Error(message));
-  }
-);
-
-export default api;
+export function logoutUser() {
+  clearAuthToken();
+}
