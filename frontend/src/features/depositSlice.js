@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { depositFunds } from "../service/mockApi";
+
 import { prependTransaction, setBalance } from "./authSlice";
 import { depositToSavingsAccount } from "./savingsSlice";
 

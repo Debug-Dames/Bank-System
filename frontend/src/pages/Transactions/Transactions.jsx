@@ -7,11 +7,11 @@ import Button from "../../components/ui/Button";
 import "../../components/ui/styles/card.css";
 import "../../components/ui/styles/button.css";
 import "./transactions.css";
-import jsPDF from 'jspdf';
+import { jsPDF } from "jspdf";
 
 const ACCOUNT_ID = "acc_001";
 
-const formatCurrency = (value) => `R ${value.toFixed(2)}`;
+const formatCurrency = (value = 0) => `R ${Number(value).toFixed(2)}`;
 
 const formatDate = (value) =>
   new Date(value).toLocaleString("en-ZA", {
@@ -24,6 +24,7 @@ const formatDate = (value) =>
 
 export default function Transactions() {
   const dispatch = useDispatch();
+
   const { status, error, items } = useSelector(
     (state) => state.auth.transactions
   );
@@ -39,29 +40,43 @@ export default function Transactions() {
     }
   }, [dispatch, status]);
 
+  // ✅ NORMALIZE BACKEND DATA (IMPORTANT FIX)
+  const normalizedItems = useMemo(() => {
+    return (items || []).map((tx) => ({
+      ...tx,
+      transactionId: tx.transactionId || tx._id,
+      date: tx.date || tx.createdAt,
+      balanceAfter: tx.balanceAfter ?? tx.balance ?? 0,
+    }));
+  }, [items]);
+
   const filteredTransactions = useMemo(() => {
     const now = new Date();
     const rangeDays = rangeFilter === "all" ? null : Number(rangeFilter);
     const search = searchTerm.trim().toLowerCase();
 
-    return (items || [])
+    return normalizedItems
       .filter((transaction) => {
         if (typeFilter !== "all" && transaction.type !== typeFilter) {
           return false;
         }
+
         if (rangeDays) {
           const diffMs = now - new Date(transaction.date);
           const diffDays = diffMs / (1000 * 60 * 60 * 24);
           if (diffDays > rangeDays) return false;
         }
+
         if (!search) return true;
-        const idMatch = transaction.transactionId.toLowerCase().includes(search);
-        const typeMatch = transaction.type.toLowerCase().includes(search);
-        const amountMatch = String(transaction.amount).includes(search);
-        return idMatch || typeMatch || amountMatch;
+
+        return (
+          transaction.transactionId?.toLowerCase().includes(search) ||
+          transaction.type?.toLowerCase().includes(search) ||
+          String(transaction.amount).includes(search)
+        );
       })
       .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [items, typeFilter, rangeFilter, searchTerm]);
+  }, [normalizedItems, typeFilter, rangeFilter, searchTerm]);
 
   const stats = useMemo(() => {
     const totals = filteredTransactions.reduce(
@@ -87,32 +102,48 @@ export default function Transactions() {
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
+
     doc.setFontSize(18);
-    doc.text('NovaBank Statement', 20, 20);
+    doc.text("NovaBank Statement", 20, 20);
+
     doc.setFontSize(12);
     doc.text(`Account ID: ${ACCOUNT_ID}`, 20, 35);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
 
     let y = 60;
-    doc.text('Date', 20, y);
-    doc.text('Type', 70, y);
-    doc.text('Amount', 120, y);
-    doc.text('Balance', 160, y);
+
+    doc.text("Date", 20, y);
+    doc.text("Type", 70, y);
+    doc.text("Amount", 120, y);
+    doc.text("Balance", 160, y);
+
     y += 10;
 
-    filteredTransactions.forEach(tx => {
+    filteredTransactions.forEach((tx) => {
       doc.text(formatDate(tx.date), 20, y);
       doc.text(tx.type, 70, y);
-      doc.text(tx.type === 'withdrawal' ? `-${formatCurrency(tx.amount)}` : formatCurrency(tx.amount), 120, y);
+
+      doc.text(
+        tx.type === "withdrawal"
+          ? `-${formatCurrency(tx.amount)}`
+          : formatCurrency(tx.amount),
+        120,
+        y
+      );
+
       doc.text(formatCurrency(tx.balanceAfter), 160, y);
+
       y += 10;
+
       if (y > 270) {
         doc.addPage();
         y = 20;
       }
     });
 
-    doc.save(`statement_${ACCOUNT_ID}_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(
+      `statement_${ACCOUNT_ID}_${new Date().toISOString().split("T")[0]}.pdf`
+    );
   };
 
   const isLoading = status === "loading";
@@ -120,6 +151,8 @@ export default function Transactions() {
   return (
     <div className="transactions-page">
       <div className="transactions-shell">
+
+        {/* HEADER */}
         <Card>
           <header className="transactions-hero">
             <div>
@@ -129,13 +162,19 @@ export default function Transactions() {
                 Track deposits and withdrawals with real-time filters.
               </p>
             </div>
+
             <div className="transactions-hero__actions">
               <Button variant="outline" onClick={handleRefresh}>
                 Refresh
               </Button>
-              <Button variant="outline" onClick={() => setShowStatement(!showStatement)}>
-                {showStatement ? 'Hide Statement' : 'View Statement'}
+
+              <Button
+                variant="outline"
+                onClick={() => setShowStatement(!showStatement)}
+              >
+                {showStatement ? "Hide Statement" : "View Statement"}
               </Button>
+
               <Button variant="primary" onClick={handleDownloadPDF}>
                 Download PDF
               </Button>
@@ -143,6 +182,7 @@ export default function Transactions() {
           </header>
         </Card>
 
+        {/* FILTERS */}
         <Card>
           <div className="transactions-controls">
             <label className="tx-control">
@@ -182,24 +222,28 @@ export default function Transactions() {
           </div>
         </Card>
 
+        {/* STATS */}
         <Card>
           <div className="transactions-stats">
             <div className="tx-stat">
               <p className="tx-stat__label">Transactions</p>
               <p className="tx-stat__value">{stats.count}</p>
             </div>
+
             <div className="tx-stat">
               <p className="tx-stat__label">Total In</p>
               <p className="tx-stat__value tx-stat__value--in">
                 {formatCurrency(stats.income)}
               </p>
             </div>
+
             <div className="tx-stat">
               <p className="tx-stat__label">Total Out</p>
               <p className="tx-stat__value tx-stat__value--out">
                 {formatCurrency(stats.outcome)}
               </p>
             </div>
+
             <div className="tx-stat tx-stat--accent">
               <p className="tx-stat__label">Net Flow</p>
               <p className="tx-stat__value">
@@ -209,96 +253,58 @@ export default function Transactions() {
           </div>
         </Card>
 
+        {/* LIST */}
         <Card>
-          <div className="transactions-card__header">
-            <span>Activity</span>
-            <span>Amount</span>
-            <span>Balance After</span>
-            <span>Date</span>
-          </div>
-
-          {isLoading && (
-            <div className="transactions-skeleton">
-              {[0, 1, 2, 3].map((item) => (
-                <div className="tx-row tx-row--skeleton" key={item}>
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!isLoading && status === "failed" && (
-            <div className="transactions-empty transactions-empty--error">
-              {error || "Unable to load transactions."}
-            </div>
-          )}
+          {isLoading && <p>Loading transactions...</p>}
 
           {!isLoading &&
-            status !== "failed" &&
             filteredTransactions.length === 0 && (
-              <div className="transactions-empty">
-                No transactions match your filters yet.
-              </div>
+              <p>No transactions found.</p>
             )}
 
           {!isLoading &&
-            status !== "failed" &&
-            filteredTransactions.map((transaction, index) => (
-              <div className="tx-row" style={{ animationDelay: `${index * 40}ms` }} key={transaction.transactionId}>
-                <div className="tx-row__meta">
-                  <span className={`tx-pill tx-pill--${transaction.type}`}>
-                    {transaction.type}
-                  </span>
-                  <span className="tx-id">{transaction.transactionId}</span>
-                </div>
-                <span
-                  className={`tx-amount tx-amount--${transaction.type}`}
-                >
+            filteredTransactions.map((transaction) => (
+              <div
+                className="tx-row"
+                key={transaction.transactionId}
+              >
+                <span>{transaction.type}</span>
+                <span>
                   {transaction.type === "withdrawal" ? "-" : "+"}
                   {formatCurrency(transaction.amount)}
                 </span>
-                <span className="tx-balance">
-                  {formatCurrency(transaction.balanceAfter)}
-                </span>
-                <span className="tx-date">{formatDate(transaction.date)}</span>
+                <span>{formatCurrency(transaction.balanceAfter)}</span>
+                <span>{formatDate(transaction.date)}</span>
               </div>
             ))}
-         </Card>
+        </Card>
 
+        {/* STATEMENT */}
         {showStatement && (
           <Card>
             <h2>Statement Preview</h2>
-            <div className="statement-preview">
-              <div className="statement-header">
-                <p><strong>Account ID:</strong> {ACCOUNT_ID}</p>
-                <p><strong>Generated on:</strong> {new Date().toLocaleDateString()}</p>
-              </div>
-              <table className="statement-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Balance</th>
+
+            <table className="statement-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredTransactions.map((tx) => (
+                  <tr key={tx.transactionId}>
+                    <td>{formatDate(tx.date)}</td>
+                    <td>{tx.type}</td>
+                    <td>{formatCurrency(tx.amount)}</td>
+                    <td>{formatCurrency(tx.balanceAfter)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredTransactions.map(tx => (
-                    <tr key={tx.transactionId}>
-                      <td>{formatDate(tx.date)}</td>
-                      <td>{tx.type}</td>
-                      <td className={tx.type === 'withdrawal' ? 'amount-negative' : 'amount-positive'}>
-                        {tx.type === 'withdrawal' ? '-' : '+'}{formatCurrency(tx.amount)}
-                      </td>
-                      <td>{formatCurrency(tx.balanceAfter)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </Card>
         )}
       </div>
