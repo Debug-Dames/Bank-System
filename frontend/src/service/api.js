@@ -1,6 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const normalizeApiUrl = (raw) => {
+  const trimmed = String(raw || "").trim().replace(/\/+$/, "");
+  if (!trimmed) return "http://localhost:8000/api";
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+};
 
-// 🔐 Attach token for protected routes
+const API_URL = normalizeApiUrl(import.meta.env.VITE_API_URL);
+
 const getHeaders = () => {
   const token = localStorage.getItem("token");
 
@@ -10,99 +15,116 @@ const getHeaders = () => {
   };
 };
 
-//
-// ======================== AUTH ========================
-//
+const parseJsonSafe = async (res) => {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+};
 
-export const loginUser = async (data) => {
-  const res = await fetch(`${API_URL}/login`, {
-    method: "POST",
+const requestJson = async (path, options = {}) => {
+  const normalizedPath = String(path || "").startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${API_URL}${normalizedPath}`, {
     headers: getHeaders(),
-    body: JSON.stringify(data),
+    ...options,
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Login failed");
+    const errorData = await parseJsonSafe(res);
+    const message =
+      errorData?.message ||
+      errorData?.error ||
+      `Request failed (${res.status})`;
+    throw new Error(message);
   }
 
-  return res.json();
+  return parseJsonSafe(res);
 };
 
-//
+// ======================== AUTH ========================
+
+export const loginUser = async (data) =>
+  requestJson("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const registerUser = async (data) =>
+  requestJson("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const getProfileAPI = async () =>
+  requestJson("/auth/me", { method: "GET" });
+
+// ======================== ACCOUNTS ========================
+
+export const getMyAccountsAPI = async () =>
+  requestJson("/account", { method: "GET" });
+
 // ===================== TRANSACTIONS =====================
-//
 
-export const getTransactionsAPI = async (accountId) => {
-  const res = await fetch(
-    `${API_URL}/transactions?accountId=${accountId}`,
-    {
-      method: "GET",
-      headers: getHeaders(),
-    }
-  );
-
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Failed to fetch transactions");
-  }
-
-  return res.json();
-};
-
-//
-// ======================== DEPOSIT ========================
-//
+export const getTransactionsAPI = async (accountId) =>
+  requestJson(`/transactions/history/${accountId}`, { method: "GET" });
 
 export const depositAPI = async (data) => {
-  const res = await fetch(`${API_URL}/deposit`, {
+  const { accountId, ...payload } = data || {};
+  if (!accountId) throw new Error("accountId is required");
+
+  return requestJson(`/transactions/${accountId}/deposit`, {
     method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Deposit failed");
-  }
-
-  return res.json();
 };
-
-//
-// ======================== WITHDRAW ========================
-//
 
 export const withdrawAPI = async (data) => {
-  const res = await fetch(`${API_URL}/withdraw`, {
+  const { accountId, ...payload } = data || {};
+  if (!accountId) throw new Error("accountId is required");
+
+  return requestJson(`/transactions/${accountId}/withdraw`, {
     method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || "Withdraw failed");
-  }
-
-  return res.json();
 };
 
-//
-// ======================== SAVINGS ========================
-//
+// ======================== SAVINGS PLANS ========================
 
-export const createSavingsAPI = async (data) => {
-  const res = await fetch(`${API_URL}/savings/create`, {
+export const getSavingsPlansAPI = async () =>
+  requestJson("/savings-plans", { method: "GET" });
+
+export const createSavingsPlanAPI = async (data) =>
+  requestJson("/savings-plans", {
     method: "POST",
-    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Failed to create savings");
-  }
+export const addToSavingsPlanAPI = async ({ planId, amount }) => {
+  if (!planId) throw new Error("planId is required");
+  return requestJson(`/savings-plans/${planId}/add`, {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+};
 
-  return res.json();
+export const withdrawFromSavingsPlanAPI = async ({ planId, amount }) => {
+  if (!planId) throw new Error("planId is required");
+  return requestJson(`/savings-plans/${planId}/withdraw`, {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+};
+
+export const updateSavingsPlanAPI = async ({ planId, update }) => {
+  if (!planId) throw new Error("planId is required");
+  return requestJson(`/savings-plans/${planId}`, {
+    method: "PUT",
+    body: JSON.stringify(update || {}),
+  });
+};
+
+export const deleteSavingsPlanAPI = async (planId) => {
+  if (!planId) throw new Error("planId is required");
+  return requestJson(`/savings-plans/${planId}`, { method: "DELETE" });
 };

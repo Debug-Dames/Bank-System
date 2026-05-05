@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { prependTransaction, setBalance } from "../../features/authSlice";
+import { fetchAccounts } from "../../features/authSlice";
 import {
   buyAirtime,
   buyData,
@@ -30,7 +31,8 @@ const DATA_BUNDLES = ["500MB", "1GB", "2GB", "5GB", "10GB"];
 export default function Transact() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const accountId = useSelector((state) => state.auth?.account?.id) || "acc_001";
+  const accounts = useSelector((state) => state.auth?.accounts);
+  const accountId = accounts?.items?.[0]?._id;
   const balance = useSelector((state) => state.auth?.balance ?? 0);
 
   const tab = useMemo(() => {
@@ -85,6 +87,10 @@ export default function Transact() {
     setError("");
     setResult(null);
   }, []);
+
+  useEffect(() => {
+    if (accounts?.status === "idle") dispatch(fetchAccounts());
+  }, [dispatch, accounts?.status]);
 
   const commitTx = useCallback((tx) => {
     dispatch(setBalance(tx.balanceAfter));

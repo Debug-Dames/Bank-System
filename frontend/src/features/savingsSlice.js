@@ -1,17 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { prependTransaction, setBalance } from "./authSlice";
-
-// In-memory store (starts empty; populated via createSavingsPlan)
-let savingsPlansStore = [];
-
-function clonePlan(plan) {
-  return plan ? { ...plan } : plan;
-}
-
-function clonePlans(plans) {
-  if (!Array.isArray(plans)) return [];
-  return plans.map((p) => clonePlan(p));
-}
+import {
+  getSavingsPlansAPI,
+  createSavingsPlanAPI,
+  addToSavingsPlanAPI,
+  withdrawFromSavingsPlanAPI,
+  updateSavingsPlanAPI,
+  deleteSavingsPlanAPI,
+} from "../service/api";
 
 const SAVINGS_BALANCE_KEY = "novabank.savings.balance";
 
@@ -202,72 +198,17 @@ export const withdrawFromSavingsAccount = createAsyncThunk(
   }
 );
 
-function recalcPlanProgressAndStatus(plan) {
-  const currentAmount = Number(plan?.currentAmount ?? 0);
-  const targetAmount = Number(plan?.targetAmount ?? 0);
-
-  const safeCurrent = Number.isFinite(currentAmount) && currentAmount >= 0 ? currentAmount : 0;
-  const safeTarget = Number.isFinite(targetAmount) && targetAmount > 0 ? targetAmount : 0;
-
-  const progress = safeTarget > 0 ? Math.min((safeCurrent / safeTarget) * 100, 100) : 0;
-  const next = { ...plan, currentAmount: safeCurrent, progress };
-
-  if (safeTarget > 0 && safeCurrent >= safeTarget) {
-    next.status = "completed";
-  } else if (next.status === "completed") {
-    next.status = "active";
-  }
-
-  return next;
-}
-
 export const depositToSavingsPlan = createAsyncThunk(
   "savings/depositToSavingsPlan",
-  async ({ planId, amount }, { dispatch, getState, rejectWithValue }) => {
+  async ({ planId, amount }, { rejectWithValue }) => {
     try {
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return rejectWithValue("Amount must be greater than zero");
       }
 
-      const state = getState();
-      const mainBalance = Number(state?.auth?.balance ?? 0);
-      if (!Number.isFinite(mainBalance) || mainBalance < 0) {
-        return rejectWithValue("Main account balance is unavailable");
-      }
-      if (numericAmount > mainBalance) {
-        return rejectWithValue("Insufficient funds");
-      }
-
-      const plan = savingsPlansStore.find((p) => p._id === planId);
-      if (!plan) {
-        return rejectWithValue("Savings plan not found");
-      }
-
-      const updatedPlan = recalcPlanProgressAndStatus({
-        ...plan,
-        currentAmount: Number(plan.currentAmount ?? 0) + numericAmount,
-        updatedAt: new Date().toISOString(),
-      });
-
-      savingsPlansStore = savingsPlansStore.map((p) => (p._id === planId ? updatedPlan : p));
-
-      const nextMainBalance = mainBalance - numericAmount;
-      dispatch(setBalance(nextMainBalance));
-      dispatch(
-        prependTransaction({
-          transactionId: `txn_${Date.now()}`,
-          type: "savings_plan_deposit",
-          amount: numericAmount,
-          balanceAfter: nextMainBalance,
-          date: new Date().toISOString(),
-          planId,
-          planName: updatedPlan.name,
-          planBalanceAfter: updatedPlan.currentAmount,
-        })
-      );
-
-      return { plan: clonePlan(updatedPlan) };
+      const response = await addToSavingsPlanAPI({ planId, amount: numericAmount });
+      return { plan: response?.data };
     } catch (error) {
       return rejectWithValue(error?.message || "Savings plan deposit failed");
     }
@@ -276,56 +217,15 @@ export const depositToSavingsPlan = createAsyncThunk(
 
 export const withdrawFromSavingsPlan = createAsyncThunk(
   "savings/withdrawFromSavingsPlan",
-  async ({ planId, amount }, { dispatch, getState, rejectWithValue }) => {
+  async ({ planId, amount }, { rejectWithValue }) => {
     try {
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return rejectWithValue("Amount must be greater than zero");
       }
 
-      const state = getState();
-      const mainBalance = Number(state?.auth?.balance ?? 0);
-      if (!Number.isFinite(mainBalance) || mainBalance < 0) {
-        return rejectWithValue("Main account balance is unavailable");
-      }
-
-      const plan = savingsPlansStore.find((p) => p._id === planId);
-      if (!plan) {
-        return rejectWithValue("Savings plan not found");
-      }
-
-      const currentAmount = Number(plan.currentAmount ?? 0);
-      if (!Number.isFinite(currentAmount) || currentAmount < 0) {
-        return rejectWithValue("Savings plan balance is unavailable");
-      }
-      if (numericAmount > currentAmount) {
-        return rejectWithValue("Insufficient savings funds");
-      }
-
-      const updatedPlan = recalcPlanProgressAndStatus({
-        ...plan,
-        currentAmount: currentAmount - numericAmount,
-        updatedAt: new Date().toISOString(),
-      });
-
-      savingsPlansStore = savingsPlansStore.map((p) => (p._id === planId ? updatedPlan : p));
-
-      const nextMainBalance = mainBalance + numericAmount;
-      dispatch(setBalance(nextMainBalance));
-      dispatch(
-        prependTransaction({
-          transactionId: `txn_${Date.now()}`,
-          type: "savings_plan_withdraw",
-          amount: numericAmount,
-          balanceAfter: nextMainBalance,
-          date: new Date().toISOString(),
-          planId,
-          planName: updatedPlan.name,
-          planBalanceAfter: updatedPlan.currentAmount,
-        })
-      );
-
-      return { plan: clonePlan(updatedPlan) };
+      const response = await withdrawFromSavingsPlanAPI({ planId, amount: numericAmount });
+      return { plan: response?.data };
     } catch (error) {
       return rejectWithValue(error?.message || "Savings plan withdrawal failed");
     }
@@ -337,13 +237,10 @@ export const fetchSavingsPlans = createAsyncThunk(
   "savings/fetchSavingsPlans",
   async (_, { rejectWithValue }) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // In a real app, this would be: await api.get('/api/savings-plans')
-      return clonePlans(savingsPlansStore);
+      const response = await getSavingsPlansAPI();
+      return response?.data || [];
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch savings plans");
+      return rejectWithValue(error?.message || "Failed to fetch savings plans");
     }
   }
 );
@@ -352,25 +249,10 @@ export const createSavingsPlan = createAsyncThunk(
   "savings/createSavingsPlan",
   async (planData, { rejectWithValue }) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const newPlan = {
-        _id: `plan_${Date.now()}`,
-        user: "user_001", // In real app, get from auth state
-        ...planData,
-        currentAmount: 0,
-        status: "active",
-        progress: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      // In a real app: await api.post('/api/savings-plans', planData)
-      savingsPlansStore = [...savingsPlansStore, newPlan];
-      return clonePlan(newPlan);
+      const response = await createSavingsPlanAPI(planData);
+      return response?.data;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to create savings plan");
+      return rejectWithValue(error?.message || "Failed to create savings plan");
     }
   }
 );
@@ -379,38 +261,15 @@ export const addToSavingsPlan = createAsyncThunk(
   "savings/addToSavingsPlan",
   async ({ planId, amount }, { rejectWithValue }) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // In a real app: await api.post(`/api/savings-plans/${planId}/add`, { amount })
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         return rejectWithValue("Amount must be greater than zero");
       }
 
-      const plan = savingsPlansStore.find(p => p._id === planId);
-      if (!plan) {
-        return rejectWithValue("Savings plan not found");
-      }
-
-      const updatedPlan = {
-        ...plan,
-        currentAmount: plan.currentAmount + numericAmount,
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Recalculate progress
-      updatedPlan.progress = Math.min((updatedPlan.currentAmount / updatedPlan.targetAmount) * 100, 100);
-
-      // Check if completed
-      if (updatedPlan.currentAmount >= updatedPlan.targetAmount) {
-        updatedPlan.status = "completed";
-      }
-
-      savingsPlansStore = savingsPlansStore.map((p) => (p._id === planId ? updatedPlan : p));
-      return clonePlan(updatedPlan);
+      const response = await addToSavingsPlanAPI({ planId, amount: numericAmount });
+      return response?.data;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to add to savings plan");
+      return rejectWithValue(error?.message || "Failed to add to savings plan");
     }
   }
 );
@@ -419,32 +278,10 @@ export const updateSavingsPlan = createAsyncThunk(
   "savings/updateSavingsPlan",
   async ({ planId, updates }, { rejectWithValue }) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // In a real app: await api.put(`/api/savings-plans/${planId}`, updates)
-      const existingPlan = savingsPlansStore.find(p => p._id === planId);
-      if (!existingPlan) {
-        return rejectWithValue("Savings plan not found");
-      }
-      const updatedPlan = {
-        ...existingPlan,
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Recalculate progress if target amount changed
-      if (updates.targetAmount) {
-        updatedPlan.progress = Math.min((updatedPlan.currentAmount / updatedPlan.targetAmount) * 100, 100);
-        if (updatedPlan.currentAmount >= updatedPlan.targetAmount) {
-          updatedPlan.status = "completed";
-        }
-      }
-
-      savingsPlansStore = savingsPlansStore.map((p) => (p._id === planId ? updatedPlan : p));
-      return clonePlan(updatedPlan);
+      const response = await updateSavingsPlanAPI({ planId, update: updates });
+      return response?.data;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to update savings plan");
+      return rejectWithValue(error?.message || "Failed to update savings plan");
     }
   }
 );
@@ -453,14 +290,10 @@ export const deleteSavingsPlan = createAsyncThunk(
   "savings/deleteSavingsPlan",
   async (planId, { rejectWithValue }) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // In a real app: await api.delete(`/api/savings-plans/${planId}`)
-      savingsPlansStore = savingsPlansStore.filter((p) => p._id !== planId);
+      await deleteSavingsPlanAPI(planId);
       return planId;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to delete savings plan");
+      return rejectWithValue(error?.message || "Failed to delete savings plan");
     }
   }
 );

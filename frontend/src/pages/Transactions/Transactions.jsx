@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTransactions } from "../../features/authSlice";
+import { fetchAccounts, fetchTransactions } from "../../features/authSlice";
 
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -8,8 +8,6 @@ import "../../components/ui/styles/card.css";
 import "../../components/ui/styles/button.css";
 import "./transactions.css";
 import { jsPDF } from "jspdf";
-
-const ACCOUNT_ID = "acc_001";
 
 const formatCurrency = (value = 0) => `R ${Number(value).toFixed(2)}`;
 
@@ -25,9 +23,12 @@ const formatDate = (value) =>
 export default function Transactions() {
   const dispatch = useDispatch();
 
-  const { status, error, items } = useSelector(
+  const { status, items } = useSelector(
     (state) => state.auth.transactions
   );
+
+  const accounts = useSelector((state) => state.auth.accounts);
+  const accountId = accounts?.items?.[0]?._id;
 
   const [typeFilter, setTypeFilter] = useState("all");
   const [rangeFilter, setRangeFilter] = useState("30");
@@ -35,10 +36,14 @@ export default function Transactions() {
   const [showStatement, setShowStatement] = useState(false);
 
   useEffect(() => {
-    if (status === "idle") {
-      dispatch(fetchTransactions({ accountId: ACCOUNT_ID }));
+    if (accounts?.status === "idle") dispatch(fetchAccounts());
+  }, [dispatch, accounts?.status]);
+
+  useEffect(() => {
+    if (accountId && status === "idle") {
+      dispatch(fetchTransactions({ accountId }));
     }
-  }, [dispatch, status]);
+  }, [dispatch, status, accountId]);
 
   // ✅ NORMALIZE BACKEND DATA (IMPORTANT FIX)
   const normalizedItems = useMemo(() => {
@@ -97,7 +102,8 @@ export default function Transactions() {
   }, [filteredTransactions]);
 
   const handleRefresh = () => {
-    dispatch(fetchTransactions({ accountId: ACCOUNT_ID }));
+    if (!accountId) return;
+    dispatch(fetchTransactions({ accountId }));
   };
 
   const handleDownloadPDF = () => {
@@ -107,7 +113,7 @@ export default function Transactions() {
     doc.text("NovaBank Statement", 20, 20);
 
     doc.setFontSize(12);
-    doc.text(`Account ID: ${ACCOUNT_ID}`, 20, 35);
+    doc.text(`Account ID: ${accountId || "—"}`, 20, 35);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
 
     let y = 60;
@@ -142,7 +148,7 @@ export default function Transactions() {
     });
 
     doc.save(
-      `statement_${ACCOUNT_ID}_${new Date().toISOString().split("T")[0]}.pdf`
+      `statement_${accountId || "account"}_${new Date().toISOString().split("T")[0]}.pdf`
     );
   };
 

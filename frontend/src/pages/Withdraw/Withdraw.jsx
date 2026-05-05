@@ -46,14 +46,12 @@ export default function Withdraw() {
 
   const { status, error, lastTransaction } = useSelector((s) => s.withdraw);
   const { balance } = useSelector((s) => s.auth);
-  const { savingsBalance } = useSelector((s) => s.savings);
 
   const [selectedAccount, setSelectedAccount] = useState("");
   const [showBalance, setShowBalance] = useState(false);
 
   const [amount, setAmount] = useState("");
   const [validationError, setValidation] = useState("");
-  const [btnLabel, setBtnLabel] = useState(LABEL.idle);
   const [shake, setShake] = useState(false);
 
   const inputRef = useRef(null);
@@ -63,21 +61,15 @@ export default function Withdraw() {
     return () => dispatch(resetWithdraw());
   }, [dispatch]);
 
-  // Button label 
-  useEffect(() => {
-    if (status === "loading") {
-      setBtnLabel(LABEL.loading);
-    } else if (status === "succeeded") {
-      setBtnLabel(LABEL.confirm);
-      setTimeout(() => setBtnLabel(LABEL.idle), 1800);
-    } else {
-      setBtnLabel(LABEL.idle);
-    }
-  }, [status]);
+  const btnLabel =
+    status === "loading"
+      ? LABEL.loading
+      : status === "succeeded"
+        ? LABEL.confirm
+        : LABEL.idle;
 
   const numericAmount = parseFloat(amount) || 0;
-  const availableBalance =
-    selectedAccount === "acc_002" ? (savingsBalance ?? 0) : (balance ?? 0);
+  const availableBalance = balance ?? 0;
   const balanceAfterPreview = availableBalance - numericAmount;
 
   const showPreview =

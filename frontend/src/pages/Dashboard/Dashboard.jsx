@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { clearTransactions, fetchTransactions } from "../../features/authSlice";
+import { clearTransactions, fetchAccounts, fetchTransactions } from "../../features/authSlice";
 import { fetchSavingsPlans } from "../../features/savingsSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
 import "./dashboard.css";
 
-const ACCOUNT_ID = "acc_001";
 const FAVORITES_KEY = "novabank.dashboard.favorites";
 
 const FAVORITE_OPTIONS = [
@@ -46,6 +45,8 @@ function safeParseFavorites(raw) {
 export default function Dashboard() {
   const dispatch = useDispatch();
   const { user = {}, balance = 0 } = useSelector((state) => state.auth || {});
+  const accounts = useSelector((state) => state.auth?.accounts);
+  const accountId = accounts?.items?.[0]?._id;
   const { status: txStatus, items: txItems = [] } = useSelector(
     (state) => state.auth?.transactions || { status: "idle", items: [] }
   );
@@ -60,13 +61,15 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (txStatus === "idle") {
-      dispatch(fetchTransactions({ accountId: ACCOUNT_ID }));
-    }
+    if (accounts?.status === "idle") dispatch(fetchAccounts());
+  }, [dispatch, accounts?.status]);
+
+  useEffect(() => {
+    if (txStatus === "idle" && accountId) dispatch(fetchTransactions({ accountId }));
     if (savingsStatus === "idle") {
       dispatch(fetchSavingsPlans());
     }
-  }, [dispatch, txStatus, savingsStatus]);
+  }, [dispatch, txStatus, savingsStatus, accountId]);
 
   useEffect(() => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
@@ -114,7 +117,10 @@ export default function Dashboard() {
         <div>
           <h1 className="dashboard-view__title">NovaBank</h1>
           <p className="dashboard-view__subtitle">
-            Welcome back, <span className="accent">{user?.name || "User"}</span>
+            Welcome back,{" "}
+            <span className="accent">
+              {user?.firstName || user?.name || "User"}
+            </span>
           </p>
         </div>
 

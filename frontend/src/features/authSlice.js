@@ -2,21 +2,29 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import { depositAsync } from "./depositSlice";
 import { withdraw } from "./withdrawSlice";
+import { getTransactionsAPI, getMyAccountsAPI } from "../service/api";
 
 // Temporary local mock data
-const mockUser = {
-  id: "user_001",
-  name: "Test User",
-  email: "test@bank.com",
-};
+function getStoredCurrentUser() {
+  try {
+    const raw = localStorage.getItem("currentUser");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+const mockUser =
+  getStoredCurrentUser() || {
+    id: "user_001",
+    firstName: "Test",
+    lastName: "User",
+    email: "test@bank.com",
+  };
 
 const mockAccount = {
   id: "OB — 0041 — 2025",
 };
-
-const mockBalance = 7100;
-
-const mockSavingsPlans = [];
 
 const mockCards = [
   {
@@ -47,10 +55,21 @@ export const fetchTransactions = createAsyncThunk(
   "auth/fetchTransactions",
   async ({ accountId }, { rejectWithValue }) => {
     try {
-      const data = await getTransactions({ accountId });
+      const data = await getTransactionsAPI(accountId);
       return data;
     } catch (error) {
       return rejectWithValue(error?.message || "Unable to load transactions");
+    }
+  }
+);
+
+export const fetchAccounts = createAsyncThunk(
+  "auth/fetchAccounts",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await getMyAccountsAPI();
+    } catch (error) {
+      return rejectWithValue(error?.message || "Unable to load accounts");
     }
   }
 );
@@ -60,6 +79,11 @@ const authSlice = createSlice({
   initialState: {
     user: mockUser,
     account: mockAccount,
+    accounts: {
+      status: "idle",
+      error: null,
+      items: [],
+    },
     balance: 0,
     cards: mockCards,
     transactions: {
@@ -70,7 +94,21 @@ const authSlice = createSlice({
   },
   reducers: {
     updateUser: (state, action) => {
-      state.user = { ...(state.user || {}), ...(action.payload || {}) };
+      const payload = action.payload || {};
+      const safe = { ...payload };
+      delete safe.pin;
+      delete safe.password;
+      delete safe.confirmPassword;
+
+      state.user = { ...(state.user || {}), ...safe };
+
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage?.setItem("currentUser", JSON.stringify(state.user));
+        }
+      } catch {
+        // ignore persistence failures
+      }
     },
 
     setBalance: (state, action) => {
@@ -126,6 +164,18 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAccounts.pending, (state) => {
+        state.accounts.status = "loading";
+        state.accounts.error = null;
+      })
+      .addCase(fetchAccounts.fulfilled, (state, action) => {
+        state.accounts.status = "succeeded";
+        state.accounts.items = Array.isArray(action.payload) ? action.payload : [];
+      })
+      .addCase(fetchAccounts.rejected, (state, action) => {
+        state.accounts.status = "failed";
+        state.accounts.error = action.payload || "Unable to load accounts";
+      })
       .addCase(fetchTransactions.pending, (state) => {
         state.transactions.status = "loading";
         state.transactions.error = null;

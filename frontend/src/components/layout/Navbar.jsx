@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import "../layout/styles/navbar.css";
 import "../../components/ui/styles/button.css";
 
@@ -19,6 +18,7 @@ export default function Navbar({ sidebarOpen, onToggleSidebar }) {
 
   // TODO Sprint 2: dispatch(logout()) before navigating
   const handleLogout = () => {
+    localStorage.removeItem("token");
     localStorage.removeItem("currentUser");
     navigate("/");
   };
