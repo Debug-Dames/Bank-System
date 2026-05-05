@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { withdrawFunds } from "../service/mockApi";
+import { withdrawFunds } from "../service/transactions";
 import { prependTransaction, setBalance } from "./authSlice";
 
 // Async thunk for handling the withdrawal process

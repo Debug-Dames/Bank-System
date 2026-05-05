@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getTransactions } from "../service/mockApi";
+import { getTransactions } from "../service/transactions";
 
 export const fetchTransactions = createAsyncThunk(
   "transactions/fetchTransactions",
