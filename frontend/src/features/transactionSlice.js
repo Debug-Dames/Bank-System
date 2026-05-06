@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getTransactionsAPI } from "../service/api";
+import { getTransactions } from "../service/transactions";
 
 // 🔥 REAL BACKEND CALL
 export const fetchTransactions = createAsyncThunk(
