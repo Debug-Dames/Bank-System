@@ -1,20 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { depositFunds } from "../service/mockApi";
-import { prependTransaction, setBalance } from "./authSlice";
+import { apiRequest } from "../service/api";
 
-// =========================
-// ASYNC THUNK (API CALL)
-// =========================
-export const depositAsync = createAsyncThunk(
-  "deposit/depositAsync",
-  async (payload, { dispatch, rejectWithValue }) => {
+// DEPOSIT
+export const deposit = createAsyncThunk(
+  "deposit/create",
+  async (amount, { rejectWithValue }) => {
     try {
-      const response = await depositFunds(payload);
-      dispatch(setBalance(response.balanceAfter));
-      dispatch(prependTransaction(response));
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message);
+      return await apiRequest("/account/deposit", "POST", { amount });
+    } catch (err) {
+      return rejectWithValue(err.message);
     }
   }
 );
@@ -22,29 +16,30 @@ export const depositAsync = createAsyncThunk(
 const depositSlice = createSlice({
   name: "deposit",
   initialState: {
-    status: "idle",
+    isLoading: false,
+    success: false,
     error: null,
-    lastTransaction: null,
   },
+
   reducers: {
     resetDeposit: (state) => {
-      state.status = "idle";
+      state.success = false;
       state.error = null;
-      state.lastTransaction = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
-      .addCase(depositAsync.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
+      .addCase(deposit.pending, (state) => {
+        state.isLoading = true;
+        state.success = false;
       })
-      .addCase(depositAsync.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.lastTransaction = action.payload;
+      .addCase(deposit.fulfilled, (state) => {
+        state.isLoading = false;
+        state.success = true;
       })
-      .addCase(depositAsync.rejected, (state, action) => {
-        state.status = "failed";
+      .addCase(deposit.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload;
       });
   },

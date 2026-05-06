@@ -1,27 +1,10 @@
-<<<<<<< HEAD
-const API_URL = import.meta.env.VITE_API_URL;
-
-export const loginUser = async (data) => {
-  const res = await fetch(`${API_URL}/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  return res.json();
-};
-=======
 import api, { setAuthToken, clearAuthToken } from "./api";
 
 export async function loginUser(credentials) {
   const data = await api.post("/auth/login", credentials);
-
   if (data?.token) {
     setAuthToken(data.token);
   }
-
   return data;
 }
 
@@ -36,4 +19,3 @@ export async function getProfile() {
 export function logoutUser() {
   clearAuthToken();
 }
->>>>>>> 5046726f149c192ff05f934be4aae8994506faf7

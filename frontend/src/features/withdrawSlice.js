@@ -1,18 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { withdrawFunds } from "../service/mockApi";
-import { prependTransaction, setBalance } from "./authSlice";
+import { apiRequest } from "../service/api";
 
-// Async thunk for handling the withdrawal process
+// WITHDRAW
 export const withdraw = createAsyncThunk(
-  "withdraw/withdrawFunds",
-  async ({ accountId, amount }, { dispatch, rejectWithValue }) => {
+  "withdraw/create",
+  async (amount, { rejectWithValue }) => {
     try {
-      const data = await withdrawFunds({ accountId, amount });
-      dispatch(setBalance(data.balanceAfter));
-      dispatch(prependTransaction(data));
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.message || "Withdrawal failed");
+      return await apiRequest("/account/withdraw", "POST", { amount });
+    } catch (err) {
+      return rejectWithValue(err.message);
     }
   }
 );
@@ -20,29 +16,30 @@ export const withdraw = createAsyncThunk(
 const withdrawSlice = createSlice({
   name: "withdraw",
   initialState: {
-    status: "idle",      // 'idle' | 'loading' | 'succeeded' | 'failed'
+    isLoading: false,
+    success: false,
     error: null,
-    lastTransaction: null,
   },
+
   reducers: {
     resetWithdraw: (state) => {
-      state.status = "idle";
+      state.success = false;
       state.error = null;
-      state.lastTransaction = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
       .addCase(withdraw.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
+        state.isLoading = true;
+        state.success = false;
       })
-      .addCase(withdraw.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.lastTransaction = action.payload;
+      .addCase(withdraw.fulfilled, (state) => {
+        state.isLoading = false;
+        state.success = true;
       })
       .addCase(withdraw.rejected, (state, action) => {
-        state.status = "failed";
+        state.isLoading = false;
         state.error = action.payload;
       });
   },
