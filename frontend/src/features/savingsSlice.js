@@ -7,7 +7,7 @@ import {
   withdrawFromSavingsPlanAPI,
   updateSavingsPlanAPI,
   deleteSavingsPlanAPI,
-} from "../service/api";
+} from "../service/savings";
 
 const SAVINGS_BALANCE_KEY = "novabank.savings.balance";
 

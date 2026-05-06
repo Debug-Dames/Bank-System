@@ -23,6 +23,7 @@ export async function getTransactions(accountIdOrOptions, query = {}) {
 
 export async function depositFunds(accountIdOrOptions, payload = {}) {
   const { accountId, payload: body } = normalizeAccountArgs(accountIdOrOptions, payload);
+  console.log("Depositing to account:", accountId, "with data:", body);
   return api.post(`/transactions/${accountId}/deposit`, body);
 }
 
