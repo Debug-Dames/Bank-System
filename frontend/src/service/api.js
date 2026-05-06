@@ -1,19 +1,23 @@
-import axios from "axios";
+import api, { setAuthToken, clearAuthToken } from "./api";
 
-const api = axios.create({
-  baseURL: "http://localhost:5000/api", // adjust if needed
-});
+export async function loginUser(credentials) {
+  const data = await api.post("/auth/login", credentials);
 
-// Attach token if exists
-export function setAuthToken(token) {
-  localStorage.setItem("token", token);
-  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  if (data?.token) {
+    setAuthToken(data.token);
+  }
+
+  return data;
 }
 
-export function clearAuthToken() {
-  localStorage.removeItem("token");
-  delete api.defaults.headers.common["Authorization"];
+export async function registerUser(payload) {
+  return api.post("/auth/register", payload);
 }
 
+export async function getProfile() {
+  return api.get("/auth/me");
+}
 
-export default api;
+export function logoutUser() {
+  clearAuthToken();
+}
