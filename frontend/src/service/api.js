@@ -1,12 +1,7 @@
-// import api  from "./api";
-
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
 
-// =====================
-// AXIOS INSTANCE
-// =====================
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -15,113 +10,63 @@ const api = axios.create({
 });
 
 // =====================
-// TOKEN HELPERS
+// TOKEN INTERCEPTOR (BEST PRACTICE)
 // =====================
-export function setAuthToken(token) {
-  localStorage.setItem("token", token);
-  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-}
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
 
-export function clearAuthToken() {
-  localStorage.removeItem("token");
-  delete api.defaults.headers.common["Authorization"];
-}
-
-// =====================
-// AUTH API
-// =====================
-export async function loginUser(credentials) {
-  try {
-    const res = await api.post("/auth/login", credentials);
-
-    const data = res.data;
-
-    if (data?.token) {
-      setAuthToken(data.token);
-    }
-
-    return data;
-  } catch (err) {
-    const message =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      err?.message ||
-      "Login failed";
-    throw new Error(message);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-}
 
-export async function registerUser(payload) {
-  try {
-    const res = await api.post("/auth/register", payload);
-    return res.data;
-  } catch (err) {
-    const message =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      err?.message ||
-      "Registration failed";
-    throw new Error(message);
+  return config;
+});
+
+// =====================
+// GENERIC REQUEST WRAPPER
+// =====================
+export const apiRequest = async (endpoint, method = "GET", data = null) => {
+  const res = await api({
+    url: endpoint,
+    method,
+    data,
+  });
+
+  return res.data;
+};
+
+// =====================
+// AUTH
+// =====================
+export const loginUser = async (credentials) => {
+  const res = await api.post("/auth/login", credentials);
+
+  if (res.data?.token) {
+    localStorage.setItem("token", res.data.token);
   }
-}
 
-export async function getProfile() {
+  return res.data;
+};
+
+export const registerUser = async (payload) => {
+  const res = await api.post("/auth/register", payload);
+  return res.data;
+};
+
+export const getProfile = async () => {
   const res = await api.get("/auth/me");
   return res.data;
-}
-
-export function logoutUser() {
-  clearAuthToken();
-}
+};
 
 // =====================
-// GENERIC REQUEST (USED BY SLICES)
+// ACCOUNTS
 // =====================
-export async function apiRequest(endpoint, method = "GET", data = null) {
-  const token = localStorage.getItem("token");
-
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: data ? JSON.stringify(data) : null,
-  });
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    throw new Error(result.message || "Request failed");
-  }
-
-  return result;
-}
+// export const getAccounts = async () => {
+//   const res = await api.get("/accounts");
+//   return res.data;
+// };
 
 // =====================
-// ACCOUNTS API (FIX FOR authSlice)
-// =====================
-export async function getMyAccountsAPI() {
-  const token = localStorage.getItem("token");
-
-  const res = await fetch(`${API_URL}/accounts`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    throw new Error(result.message || "Failed to fetch accounts");
-  }
-
-  return result;
-}
-
-// =====================
-// EXPORT DEFAULT (FIXED)
+// EXPORT
 // =====================
 export default api;

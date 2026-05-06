@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAccounts, fetchTransactions } from "../../features/authSlice";
+import { fetchTransactions } from "../../features/transactionSlice";
+import { fetchAccounts } from "../../features/accountSlice";
 
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";

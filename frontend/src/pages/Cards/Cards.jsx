@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCardBlocked, updateCardLimits } from "../../features/authSlice";
+import { setCardBlocked, updateCardLimits } from "../../features/transactionSlice";
 
 import "../../components/ui/styles/card.css";
 import "../../components/ui/styles/button.css";

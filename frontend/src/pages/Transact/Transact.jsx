@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
-import { prependTransaction, setBalance } from "../../features/authSlice";
-import { fetchAccounts } from "../../features/authSlice";
+import { prependTransaction, setBalance } from "../../features/transactionSlice";
+import { fetchAccounts } from "../../features/accountSlice";
 import {
   buyAirtime,
   buyData,

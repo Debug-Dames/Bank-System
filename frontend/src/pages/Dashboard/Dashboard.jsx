@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { clearTransactions, fetchAccounts, fetchTransactions } from "../../features/authSlice";
+import { clearTransactions } from "../../features/transactionSlice";
+import { fetchAccounts } from "../../features/accountSlice";
+import { fetchTransactions } from "../../features/transactionSlice";
+// import { clearTransactions, fetchAccounts, fetchTransactions } from "../../features/authSlice";
 import { fetchSavingsPlans } from "../../features/savingsSlice";
 
 import "../../components/ui/styles/button.css";

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { depositAsync, resetDeposit } from "../../features/depositSlice";
+import { depositMoney, clearStatus, fetchTransactions } from "../../features/transactionSlice";
+import { fetchAccounts, setSelectedAccount } from "../../features/accountSlice";
+
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -10,52 +12,85 @@ import "./deposit.css";
 
 const PRESETS = [500, 1000, 2500, 5000];
 
-const ACCOUNTS = [
-  { id: "acc_001", name: "Main Account" },
-  { id: "acc_002", name: "Savings Account" },
-];
-
 export default function Deposit() {
   const dispatch = useDispatch();
-  const { status, error, lastTransaction } = useSelector((state) => state.deposit);
-  const { balance } = useSelector((s) => s.auth);
 
-  const [selectedAccount, setSelectedAccount] = useState("");
-  const [showBalance, setShowBalance] = useState(false);
+  // 🔹 Redux state
+  const { accounts, selectedAccount, isLoading: accountsLoading } =
+    useSelector((state) => state.accounts);
+
+  const {
+    transactions,
+    isLoading,
+    error,
+    success,
+  } = useSelector((state) => state.transactions);
+
+  // 🔹 Local state
   const [amount, setAmount] = useState("");
+  const [showBalance, setShowBalance] = useState(false);
   const [validationError, setValidation] = useState("");
+  const [lastTransaction, setLastTransaction] = useState(null);
 
   const inputRef = useRef(null);
 
-  const isLoading = status === "loading";
   const numericAmount = parseFloat(amount) || 0;
-  const availableBalance = balance ?? 0;
+  const availableBalance = selectedAccount?.availableBalance ?? 0;
 
-  // Reset on unmount
+  // ✅ Load accounts on mount
   useEffect(() => {
-    return () => dispatch(resetDeposit());
+    dispatch(fetchAccounts());
   }, [dispatch]);
 
+  // ✅ Fetch transactions when account changes
+  useEffect(() => {
+    if (selectedAccount?._id) {
+      dispatch(fetchTransactions({ accountId: selectedAccount._id }));
+    }
+  }, [selectedAccount, dispatch]);
+
+  // ✅ Capture latest transaction after deposit
+  useEffect(() => {
+    if (success && transactions.length > 0) {
+      setLastTransaction(transactions[0]);
+      dispatch(fetchAccounts()); // refresh balances
+    }
+  }, [success, transactions, dispatch]);
+
+  // ✅ Cleanup
+  useEffect(() => {
+    return () => dispatch(clearStatus());
+  }, [dispatch]);
+
+  // 🔍 Validation
   const validate = () => {
     if (!selectedAccount) {
       setValidation("Please select an account.");
       return false;
     }
     if (!amount || isNaN(amount)) {
-      setValidation("Please enter a valid amount.");
+      setValidation("Enter a valid amount.");
       return false;
     }
-    if (parseFloat(amount) <= 0) {
-      setValidation("Amount must be greater than R 0.00.");
+    if (numericAmount <= 0) {
+      setValidation("Amount must be greater than R0.");
       return false;
     }
     setValidation("");
     return true;
   };
 
+  // 💸 Deposit handler
   const handleDeposit = () => {
     if (!validate()) return;
-    dispatch(depositAsync({ accountId: selectedAccount, amount: numericAmount }));
+
+    dispatch(
+      depositMoney({
+        accountId: selectedAccount._id,
+        amount: numericAmount,
+        note: "Deposit from app",
+      })
+    );
   };
 
   const handlePreset = (val) => {
@@ -68,93 +103,103 @@ export default function Deposit() {
     setAmount("");
     setValidation("");
     setShowBalance(false);
-    setSelectedAccount("");
-    dispatch(resetDeposit());
+    setLastTransaction(null);
+    dispatch(clearStatus());
   };
 
   return (
     <div className="deposit-page">
 
-      <span className="deposit-glyph" aria-hidden="true">R</span>
+      <span className="deposit-glyph">R</span>
 
       <div className="card card--narrow deposit-card">
 
-        {/* ── Success ──────────────────────────────────────── */}
-        {status === "succeeded" && lastTransaction ? (
-          <div className="deposit-success animate-fadeUp">
-            <div className="deposit-success__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
+        {/* ✅ SUCCESS SCREEN */}
+        {success && lastTransaction ? (
+          <div className="deposit-success">
+
+            <div className="deposit-success__icon">✔</div>
 
             <div className="deposit-success__copy">
-              <p className="deposit-success__label">Deposit Complete</p>
-              <h2 className="deposit-success__amount">
-                R {lastTransaction.amount.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+              <p>Deposit Complete</p>
+              <h2>
+                R{" "}
+                {lastTransaction.amount?.toLocaleString("en-ZA", {
+                  minimumFractionDigits: 2,
+                })}
               </h2>
             </div>
 
             <div className="deposit-success__details">
-              <div className="deposit-success__row">
+
+              <div>
                 <span>Transaction ID</span>
-                <span className="deposit-success__mono">{lastTransaction.transactionId}</span>
+                <span>{lastTransaction.transactionId}</span>
               </div>
-              <div className="deposit-success__row">
+
+              <div>
                 <span>New Balance</span>
-                <span>R {lastTransaction.balanceAfter.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+                <span>
+                  R{" "}
+                  {lastTransaction.balanceAfter?.toLocaleString("en-ZA", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
               </div>
-              <div className="deposit-success__row">
+
+              <div>
                 <span>Date</span>
-                <span>{new Date(lastTransaction.date).toLocaleString("en-ZA")}</span>
+                <span>
+                  {new Date(
+                    lastTransaction.processedAt || Date.now()
+                  ).toLocaleString("en-ZA")}
+                </span>
               </div>
+
             </div>
 
-            <div className="deposit-success__actions">
-              <button className="btn btn--outline btn--full" onClick={handleReset}>
-                New Deposit
-              </button>
-            </div>
+            <button
+              className="btn btn--outline btn--full"
+              onClick={handleReset}
+            >
+              New Deposit
+            </button>
+
           </div>
 
         ) : (
           <>
-            {/* ── Header ───────────────────────────────────── */}
-            <div className="card__head deposit-header">
-              <div>
-                <p className="deposit-eyebrow">Credit</p>
-                <h1 className="deposit-title">Deposit Funds</h1>
-                <p className="deposit-description">
-                  Funds will be credited to your account immediately.
-                </p>
-              </div>
+            {/* HEADER */}
+            <div className="card__head">
+              <h1>Deposit Funds</h1>
+              <p>Funds will reflect immediately.</p>
             </div>
 
-            {/* ── Account Select ────────────────────────────── */}
-            <div className="form-group deposit-account">
-              <label className="form-label">Select Account</label>
+            {/* ACCOUNT SELECT */}
+            <div className="form-group">
+              <label>Select Account</label>
               <select
                 className="form-input"
-                value={selectedAccount}
+                value={selectedAccount?._id || ""}
                 onChange={(e) => {
-                  setSelectedAccount(e.target.value);
+                  const acc = accounts.find(a => a._id === e.target.value);
+                  dispatch(setSelectedAccount(acc));
                   setShowBalance(false);
                 }}
               >
                 <option value="">-- Choose account --</option>
-                {ACCOUNTS.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name}
+                {accounts.map((acc) => (
+                  <option key={acc._id} value={acc._id}>
+                    {acc.accountType || acc.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* ── Live balance ──────────────────────────────── */}
+            {/* BALANCE */}
             <div className="deposit-balance">
               {!showBalance ? (
                 <button
-                  type="button"
                   className="btn btn--ghost btn--sm"
                   onClick={() => setShowBalance(true)}
                   disabled={!selectedAccount}
@@ -163,77 +208,70 @@ export default function Deposit() {
                 </button>
               ) : (
                 <>
-                  <span className="deposit-balance__label">Available Balance</span>
-                  <span className="deposit-balance__amount">
-                    R {availableBalance.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                  <span>Available Balance</span>
+                  <span>
+                    R {availableBalance.toLocaleString("en-ZA")}
                   </span>
                 </>
               )}
             </div>
 
-            {/* ── Form ─────────────────────────────────────── */}
+            {/* FORM */}
             <div className="deposit-form">
 
-              {/* Preset amounts */}
+              {/* PRESETS */}
               <div className="deposit-presets">
                 {PRESETS.map((p) => (
                   <button
                     key={p}
-                    type="button"
-                    className={`deposit-preset${numericAmount === p ? " deposit-preset--active" : ""}`}
+                    className={`deposit-preset ${
+                      numericAmount === p ? "deposit-preset--active" : ""
+                    }`}
                     onClick={() => handlePreset(p)}
-                    disabled={!selectedAccount}
+                    type="button"
                   >
-                    R {p.toLocaleString("en-ZA")}
+                    R {p}
                   </button>
                 ))}
               </div>
 
-              {/* Amount input */}
+              {/* INPUT */}
               <div className="form-group">
-                <label className="form-label">Amount (ZAR)</label>
-                <div className={`input-wrapper${validationError ? " input-wrapper--error" : ""}`}>
-                  <span className={`input-prefix${amount ? " input-prefix--active" : ""}`}>R</span>
-                  <input
-                    ref={inputRef}
-                    id="amount"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.00"
-                    className="form-input"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    disabled={isLoading || !selectedAccount}
-                  />
-                </div>
-                {validationError && <p className="form-error">{validationError}</p>}
+                <label>Amount</label>
+                <input
+                  ref={inputRef}
+                  type="number"
+                  placeholder="0.00"
+                  className="form-input"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  disabled={!selectedAccount || isLoading}
+                />
+                {validationError && (
+                  <p className="form-error">{validationError}</p>
+                )}
               </div>
 
-              {/* API error */}
-              {status === "failed" && error && (
+              {/* ERROR */}
+              {error && (
                 <div className="alert alert--error">
-                  <span className="alert__indicator" />
-                  <span className="alert__message">{error}</span>
+                  {error}
                 </div>
               )}
 
-              {/* Submit */}
+              {/* SUBMIT */}
               <button
-                type="button"
                 className="btn btn--primary btn--full"
                 onClick={handleDeposit}
-                disabled={isLoading}
+                disabled={!selectedAccount || isLoading}
               >
-                {isLoading
-                  ? <span className="btn__spinner" aria-label="Processing" />
-                  : "Confirm Deposit"
-                }
+                {isLoading ? "Processing..." : "Confirm Deposit"}
               </button>
 
             </div>
           </>
         )}
+
       </div>
     </div>
   );

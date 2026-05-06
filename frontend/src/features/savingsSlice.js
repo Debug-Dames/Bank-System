@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { prependTransaction, setBalance } from "./authSlice";
+import { prependTransaction, setBalance } from "./transactionSlice";
 import {
   getSavingsPlansAPI,
   createSavingsPlanAPI,
