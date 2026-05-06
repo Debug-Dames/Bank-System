@@ -93,6 +93,22 @@ const authSlice = createSlice({
     },
   },
   reducers: {
+    logout: (state) => {
+      state.user = null;
+      state.balance = 0;
+      state.transactions = { status: "idle", error: null, items: [] };
+      state.accounts = { status: "idle", error: null, items: [] };
+
+      try {
+        if (typeof window !== "undefined") {
+          window.localStorage?.removeItem("token");
+          window.localStorage?.removeItem("currentUser");
+        }
+      } catch {
+        // ignore persistence failures
+      }
+    },
+
     updateUser: (state, action) => {
       const payload = action.payload || {};
       const safe = { ...payload };
@@ -105,6 +121,24 @@ const authSlice = createSlice({
       try {
         if (typeof window !== "undefined") {
           window.localStorage?.setItem("currentUser", JSON.stringify(state.user));
+
+          // Keep the registered profile in sync so changes persist across sign-out/sign-in.
+          const rawRegistered = window.localStorage?.getItem("registeredUser");
+          const registeredUser = rawRegistered ? JSON.parse(rawRegistered) : null;
+          const sameUser =
+            registeredUser &&
+            (registeredUser.id && state.user?.id
+              ? registeredUser.id === state.user.id
+              : registeredUser.email && state.user?.email
+                ? registeredUser.email === state.user.email
+                : false);
+
+          if (sameUser) {
+            window.localStorage?.setItem(
+              "registeredUser",
+              JSON.stringify({ ...registeredUser, ...safe })
+            );
+          }
         }
       } catch {
         // ignore persistence failures
@@ -230,6 +264,7 @@ const authSlice = createSlice({
 });
 
 export const {
+  logout,
   updateUser,
   setBalance,
   clearTransactions,

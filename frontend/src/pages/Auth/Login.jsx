@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from 'react-router-dom';
 import './auth.css';
 
 import Button from "../../components/ui/Button";
 import Alert from "../../components/ui/Alert";
+import { updateUser } from "../../features/authSlice";
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -55,6 +58,7 @@ export default function Login() {
     }
 
     localStorage.setItem('currentUser', JSON.stringify(savedUser));
+    dispatch(updateUser(savedUser));
     setSuccess('Login successful. Redirecting...');
 
     setTimeout(() => {
@@ -125,4 +129,3 @@ export default function Login() {
     </div>
   );
 }
-
