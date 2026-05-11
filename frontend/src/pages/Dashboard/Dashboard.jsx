@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { clearTransactions } from "../../features/transactionSlice";
 import { fetchAccounts } from "../../features/accountSlice";
 import { fetchTransactions } from "../../features/transactionSlice";
-// import { clearTransactions, fetchAccounts, fetchTransactions } from "../../features/authSlice";
 import { fetchSavingsPlans } from "../../features/savingsSlice";
 
 import "../../components/ui/styles/button.css";
@@ -47,15 +46,32 @@ function safeParseFavorites(raw) {
 
 export default function Dashboard() {
   const dispatch = useDispatch();
-  const { user = {}, balance = 0 } = useSelector((state) => state.auth || {});
-  const accounts = useSelector((state) => state.auth?.accounts);
-  const accountId = accounts?.items?.[0]?._id;
-  const { status: txStatus, items: txItems = [] } = useSelector(
-    (state) => state.auth?.transactions || { status: "idle", items: [] }
-  );
-  const { plans: savingsPlans = [], status: savingsStatus } = useSelector(
-    (state) => state.savings || { plans: [], status: "idle" }
-  );
+  const { user = {} } = useSelector((state) => state.auth);
+
+  const {
+    accounts = [],
+    isLoading: accountsLoading,
+  } = useSelector((state) => state.accounts);
+
+  const {
+    transactions: txItems = [],
+    isLoading: txLoading,
+  } = useSelector((state) => state.transactions);
+
+  const {
+    plans: savingsPlans = [],
+    status: savingsStatus,
+  } = useSelector((state) => state.savings);
+
+  const mainAccount = accounts?.[0];
+  console.log("accoutnt: ", mainAccount)
+
+  const accountId = mainAccount?._id;
+
+  const balance = Number(mainAccount?.balance || 0);
+
+  const txStatus = txLoading ? "loading" : "succeeded";
+
 
   const [favorites, setFavorites] = useState(() => {
     const stored = safeParseFavorites(localStorage.getItem(FAVORITES_KEY));
@@ -64,15 +80,18 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    if (accounts?.status === "idle") dispatch(fetchAccounts());
-  }, [dispatch, accounts?.status]);
+    dispatch(fetchAccounts());
+  }, [dispatch]);
 
   useEffect(() => {
-    if (txStatus === "idle" && accountId) dispatch(fetchTransactions({ accountId }));
+    if (accountId) {
+      dispatch(fetchTransactions({accountId}));
+    }
+
     if (savingsStatus === "idle") {
       dispatch(fetchSavingsPlans());
     }
-  }, [dispatch, txStatus, savingsStatus, accountId]);
+  }, [dispatch, accountId, savingsStatus]);
 
   useEffect(() => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));

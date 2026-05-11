@@ -7,9 +7,14 @@ export const fetchAccounts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await getAccounts();
+
+      console.log("ACCOUNT RESPONSE:", res.data);
+
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.message || err.message
+      );
     }
   }
 );
