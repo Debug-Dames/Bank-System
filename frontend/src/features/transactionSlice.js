@@ -72,17 +72,7 @@ const transactionSlice = createSlice({
       state.transactions = [];
     },
 
-    setCardBlocked: (state, action) => {
-      const { cardId, blocked } = action.payload || {};
-      const card = state.cards.find((c) => c.id === cardId);
-      if (card) card.blocked = blocked;
-    },
-
-    updateCardLimits: (state, action) => {
-      const { cardId, limit } = action.payload || {};
-      const card = state.cards.find((c) => c.id === cardId);
-      if (card) card.limit = limit;
-    },
+    
   },
 
   extraReducers: (builder) => {
@@ -125,6 +115,6 @@ const transactionSlice = createSlice({
 });
 
 // ✅ EXPORT IT HERE
-export const { clearStatus, prependTransaction, setBalance, clearTransactions, setCardBlocked, updateCardLimits } = transactionSlice.actions;
+export const { clearStatus, prependTransaction, setBalance, clearTransactions } = transactionSlice.actions;
 
 export default transactionSlice.reducer;
