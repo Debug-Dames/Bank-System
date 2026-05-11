@@ -72,7 +72,7 @@ export const withdrawAmount = async (userId, amount) => {
  * Get all accounts for the logged-in user
  */
 export const getUserAccounts = async (userId) => {
-  const accounts = await Account.find({ userId, status: { $ne: "closed" } }).sort({
+  const accounts = await Account.find({ user: userId, status: { $ne: "closed" } }).sort({
     openedAt: 1,
   });
   return accounts;
