@@ -6,12 +6,15 @@ import accountRoutes from "./routes/accountRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import cardRoutes from "./routes/cardRoutes.js";
 import savingsPlanRoutes from "./routes/savingsPlanRoutes.js";
+import { metricsHandler, metricsMiddleware } from "./middleware/metricsMiddleware.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(metricsMiddleware);
 
+app.get("/metrics", metricsHandler);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);
