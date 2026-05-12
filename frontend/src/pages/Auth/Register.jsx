@@ -106,7 +106,7 @@ export default function Register() {
     } else {
       setError(result.payload || "Registration failed");
     }
-  } catch (err) {
+  } catch {
     setError("Something went wrong. Please try again.");
   }
 };
