@@ -45,3 +45,4 @@ export async function buyElectricity(accountIdOrOptions, payload = {}) {
   const { accountId, payload: body } = normalizeAccountArgs(accountIdOrOptions, payload);
   return api.post(`/transactions/${accountId}/utility/electricity`, body);
 }
+5
