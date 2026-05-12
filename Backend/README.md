@@ -40,11 +40,10 @@ src/
 
 | Type      | Min Monthly Income | Description                        |
 |-----------|--------------------|------------------------------------|
-| Cheque    | R0                 | Standard everyday banking          |
+| Transactional    | R0                 | Standard everyday banking          |
 | Savings   | R0                 | Earn interest on savings           |
-| Gold      | R8,000             | Premium banking with benefits      |
-| Platinum  | R25,000            | Elite banking experience           |
-| Business  | R5,000             | Tailored for business needs        |
+| Platinum  | R20,000            | Elite banking experience           |
+| Current  | R5,000             | Tailored for business needs        |
 
 ---
 
@@ -109,7 +108,7 @@ Open a new account. Income is validated against account type minimums.
   "lastName": "Doe",
   "phoneNumber": "0712345678",
   "monthlyIncome": 15000,
-  "accountType": "Gold"
+  "accountType": "platinum"
 }
 ```
 Returns the new account + auto-creates a virtual card — **201**

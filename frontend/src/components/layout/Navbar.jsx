@@ -3,23 +3,21 @@ import { useDispatch, useSelector } from "react-redux";
 import "../layout/styles/navbar.css";
 import "../../components/ui/styles/button.css";
 
-// TODO Sprint 2: replace with useSelector((state) => state.auth.user)
-function getCurrentUser() {
-  try {
-    const raw = localStorage.getItem("currentUser");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
+import { logout } from "../../features/authSlice";
 
 export default function Navbar({ sidebarOpen, onToggleSidebar }) {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth?.user);
 
-  // TODO Sprint 2: dispatch(logout()) before navigating
+  const firstName = user?.firstName?.trim?.() || "";
+  const lastName = user?.lastName?.trim?.() || "";
+  const displayName = (firstName || lastName)
+    ? `${firstName}${firstName && lastName ? " " : ""}${lastName}`
+    : user?.email || "Guest";
+
   const handleLogout = () => {
-    localStorage.removeItem("currentUser");
+    dispatch(logout());
     navigate("/");
   };
 
@@ -52,8 +50,8 @@ export default function Navbar({ sidebarOpen, onToggleSidebar }) {
       {/* Right side */}
       <div className="navbar__nav">
         <div className="navbar__user">
-          <span className="navbar__user-name">{user.firstName ?? "Guest"}</span>
-          <span className="navbar__user-label">{user.tier ?? "Standard"}</span>
+          <span className="navbar__user-name">{displayName}</span>
+          <span className="navbar__user-label">{user?.tier ?? "Standard"}</span>
         </div>
         <div className="navbar__sep" aria-hidden="true" />
         <button className="btn btn--outline btn--sm" onClick={handleLogout}>

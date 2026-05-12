@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from 'react-router-dom';
+import { register } from "../../features/authSlice";
+
 import './auth.css';
 
 import Button from "../../components/ui/Button";
@@ -7,20 +10,23 @@ import Alert from "../../components/ui/Alert";
 
 export default function Register() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { isLoading, error } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     idNumber: '',
-    phone: '',
+    phoneNumber: '',
     email: '',
     password: '',
+    pin: '',
     confirmPassword: '',
   });
 
-  const [error, setError] = useState('');
+  const [localError, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -35,89 +41,85 @@ export default function Register() {
       firstName,
       lastName,
       idNumber,
-      phone,
+      phoneNumber,
       email,
       password,
-      confirmPassword
+      confirmPassword,
+      pin
     } = formData;
 
     if (
       !firstName ||
       !lastName ||
       !idNumber ||
-      !phone ||
+      !phoneNumber ||
       !email ||
       !password ||
-      !confirmPassword
+      !confirmPassword ||
+      !pin
     ) {
       return 'Please fill in all fields.';
     }
 
-    if (!email.includes('@')) {
-      return 'Please enter a valid email address.';
-    }
-
-    if (idNumber.length < 5) {
-      return 'Please enter a valid ID number.';
-    }
-
-    if (phone.length < 10) {
-      return 'Please enter a valid phone number.';
-    }
-
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters.';
-    }
-
-    if (password !== confirmPassword) {
-      return 'Passwords do not match.';
-    }
+    if (!email.includes('@')) return 'Please enter a valid email address.';
+    if (idNumber.length < 5) return 'Please enter a valid ID number.';
+    if (phoneNumber.length < 10) return 'Please enter a valid phone number.';
+    if (pin.length < 4) return 'PIN must be at least 4 digits.';
+    if (password.length < 8) return 'Password must be at least 8 characters.';
+    if (password !== confirmPassword) return 'Passwords do not match.';
 
     return '';
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      setLoading(false);
-      return;
-    }
+  setError("");
+  setSuccess("");
 
-    const registeredUser = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      idNumber: formData.idNumber,
-      phone: formData.phone,
-      email: formData.email,
-      password: formData.password,
-    };
+  const errorMsg = validateForm();
+  if (errorMsg) {
+    setError(errorMsg);
+    return;
+  }
 
-    localStorage.setItem('registeredUser', JSON.stringify(registeredUser));
-
-    setSuccess('Registration successful. Redirecting...');
-
-    setTimeout(() => {
-      navigate('/');
-    }, 1000);
+  const payload = {
+    firstName: formData.firstName?.trim(),
+    lastName: formData.lastName?.trim(),
+    idNumber: formData.idNumber?.trim(),
+    phoneNumber: formData.phoneNumber?.trim(),
+    email: formData.email?.trim(),
+    password: formData.password,
+    confirmPassword: formData.confirmPassword,
+    pin: formData.pin,
   };
+
+  try {
+    const result = await dispatch(register(payload));
+
+    if (register.fulfilled.match(result)) {
+      setSuccess("Account created successfully!");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+    } else {
+      setError(result.payload || "Registration failed");
+    }
+  } catch (err) {
+    setError("Something went wrong. Please try again.");
+  }
+};
 
   return (
     <div className="auth-page">
       <div className="auth-shell">
         <div className="auth-intro">
-          <img
-            src="/novaBank-logo.jpg"
-            alt="Nova Bank"
-            className="auth-logo"
-          />
+          <img src="/novaBank-logo.jpg" alt="Nova Bank" className="auth-logo" />
           <h1 className="auth-page-title">Create Account</h1>
-          <p className="auth-page-subtitle">Fill in your details to open your banking profile.</p>
+          <p className="auth-page-subtitle">
+            Fill in your details to open your banking profile.
+          </p>
         </div>
 
         <section className="auth-panel">
@@ -125,107 +127,58 @@ export default function Register() {
             <h2 className="auth-panel__title">Personal Info</h2>
           </div>
 
+          {localError && <Alert variant="error">{localError}</Alert>}
           {error && <Alert variant="error">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
           <form onSubmit={handleSubmit} className="auth-form auth-form--two-column">
+
             <div className="auth-field">
-              <label htmlFor="firstName">First Name</label>
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Enter your first name"
-                autoComplete="given-name"
-              />
+              <label>First Name</label>
+              <input name="firstName" value={formData.firstName} onChange={handleChange} />
             </div>
 
             <div className="auth-field">
-              <label htmlFor="lastName">Last Name</label>
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Enter your last name"
-                autoComplete="family-name"
-              />
+              <label>Last Name</label>
+              <input name="lastName" value={formData.lastName} onChange={handleChange} />
             </div>
 
             <div className="auth-field">
-              <label htmlFor="idNumber">ID Number</label>
-              <input
-                id="idNumber"
-                name="idNumber"
-                type="text"
-                value={formData.idNumber}
-                onChange={handleChange}
-                placeholder="Enter your ID number"
-                inputMode="numeric"
-              />
+              <label>ID Number</label>
+              <input name="idNumber" value={formData.idNumber} onChange={handleChange} />
             </div>
 
             <div className="auth-field">
-              <label htmlFor="phone">Phone Number</label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-                autoComplete="tel"
-              />
+              <label>Phone Number</label>
+              <input name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} />
             </div>
 
             <div className="auth-field auth-field--full">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="test@bank.com"
-                autoComplete="email"
-              />
+              <label>Email</label>
+              <input name="email" value={formData.email} onChange={handleChange} />
             </div>
 
             <div className="auth-field auth-field--full">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create a password"
-                autoComplete="new-password"
-              />
-              <span className="auth-hint">Use at least 8 characters.</span>
+              <label>Password</label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} />
             </div>
 
             <div className="auth-field auth-field--full">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                autoComplete="new-password"
-              />
+              <label>PIN</label>
+              <input type="password" name="pin" value={formData.pin} onChange={handleChange} />
+            </div>
+
+            <div className="auth-field auth-field--full">
+              <label>Confirm Password</label>
+              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
             </div>
 
             <div className="auth-actions auth-actions--full">
-              <Button type="submit" size="lg" loading={loading}>
+              <Button type="submit" size="lg" loading={isLoading}>
                 Create Account
               </Button>
             </div>
+
           </form>
 
           <p className="auth-switch-text">

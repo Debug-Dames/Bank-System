@@ -14,11 +14,12 @@ export default function Profile() {
 
   const initialForm = useMemo(
     () => ({
-      name: user?.name ?? "",
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
       email: user?.email ?? "",
-      pin: "",
+      phoneNumber: user?.phoneNumber ?? user?.phone ?? "",
     }),
-    [user?.email, user?.name]
+    [user?.email, user?.firstName, user?.lastName, user?.phoneNumber, user?.phone]
   );
 
   const [form, setForm] = useState(initialForm);
@@ -51,16 +52,34 @@ export default function Profile() {
 
         <form className="profile-view__form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="name" className="form-label">
-              Name
+            <label htmlFor="firstName" className="form-label">
+              First Name
             </label>
             <input
-              id="name"
+              id="firstName"
               className="form-input"
-              name="name"
-              value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              autoComplete="name"
+              name="firstName"
+              value={form.firstName}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, firstName: e.target.value }))
+              }
+              autoComplete="given-name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="lastName" className="form-label">
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              className="form-input"
+              name="lastName"
+              value={form.lastName}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, lastName: e.target.value }))
+              }
+              autoComplete="family-name"
             />
           </div>
 
@@ -79,17 +98,19 @@ export default function Profile() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="pin" className="form-label">
-              Reset Pin
+            <label htmlFor="phoneNumber" className="form-label">
+              Phone Number
             </label>
             <input
-              id="pin"
+              id="phoneNumber"
               className="form-input"
-              name="pin"
-              type="password"
-              value={form.pin ?? ""}
-              onChange={(e) => setForm((prev) => ({ ...prev, pin: e.target.value }))}
-              autoComplete="new-password"
+              name="phoneNumber"
+              type="tel"
+              value={form.phoneNumber ?? ""}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, phoneNumber: e.target.value }))
+              }
+              autoComplete="tel"
             />
           </div>
           <div className="profile-view__actions">

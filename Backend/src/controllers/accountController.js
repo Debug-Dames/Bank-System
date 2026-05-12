@@ -7,6 +7,7 @@ import {
   getAccountById,
   getAvailableAccountTypes,
 } from "../services/accountService.js";
+import { ACCOUNT_TYPE_CONFIG } from "../config/accountTypes.js";
 
 // GET BALANCE
 export const getBalance = async (req, res) => {

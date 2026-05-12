@@ -1,31 +1,36 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { depositFunds } from "../service/transactions";
-import { prependTransaction, setBalance } from "./authSlice";
 
-// =========================
-// ASYNC THUNK (API CALL)
-// =========================
+// =====================
+// DEPOSIT ASYNC ACTION
+// =====================
 export const depositAsync = createAsyncThunk(
   "deposit/depositAsync",
-  async (payload, { dispatch, rejectWithValue }) => {
+  async ({ accountId, amount }, { rejectWithValue }) => {
     try {
-      const response = await depositFunds(payload);
-      dispatch(setBalance(response.balanceAfter));
-      dispatch(prependTransaction(response));
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message);
+      if (!accountId) throw new Error("Account ID missing");
+
+      const res = await depositFunds(accountId, { amount });
+
+      // safety fallback
+      return res || {};
+    } catch (err) {
+      return rejectWithValue(err.message || "Deposit failed");
     }
   }
 );
 
+// =====================
+// SLICE
+// =====================
 const depositSlice = createSlice({
   name: "deposit",
   initialState: {
-    status: "idle",
+    status: "idle", // idle | loading | succeeded | failed
     error: null,
     lastTransaction: null,
   },
+
   reducers: {
     resetDeposit: (state) => {
       state.status = "idle";
@@ -33,22 +38,28 @@ const depositSlice = createSlice({
       state.lastTransaction = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
       .addCase(depositAsync.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
+
       .addCase(depositAsync.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.lastTransaction = action.payload;
+
+        // safe fallback prevents crashes
+        state.lastTransaction = action.payload || null;
       })
+
       .addCase(depositAsync.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload;
+        state.error = action.payload || "Deposit failed";
       });
   },
 });
 
 export const { resetDeposit } = depositSlice.actions;
+
 export default depositSlice.reducer;

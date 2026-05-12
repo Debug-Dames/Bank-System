@@ -52,7 +52,6 @@ export default function Withdraw() {
 
   const [amount, setAmount] = useState("");
   const [validationError, setValidation] = useState("");
-  const [btnLabel, setBtnLabel] = useState(LABEL.idle);
   const [shake, setShake] = useState(false);
 
   const inputRef = useRef(null);
@@ -62,17 +61,12 @@ export default function Withdraw() {
     return () => dispatch(resetWithdraw());
   }, [dispatch]);
 
-  // Button label 
-  useEffect(() => {
-    if (status === "loading") {
-      setBtnLabel(LABEL.loading);
-    } else if (status === "succeeded") {
-      setBtnLabel(LABEL.confirm);
-      setTimeout(() => setBtnLabel(LABEL.idle), 1800);
-    } else {
-      setBtnLabel(LABEL.idle);
-    }
-  }, [status]);
+  const btnLabel =
+    status === "loading"
+      ? LABEL.loading
+      : status === "succeeded"
+        ? LABEL.confirm
+        : LABEL.idle;
 
   const numericAmount = parseFloat(amount) || 0;
   const availableBalance = balance ?? 0;
