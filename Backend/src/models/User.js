@@ -70,6 +70,10 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.passwordHash);
 };
 
+userSchema.methods.matchPin = async function (enteredPin) {
+  return await bcrypt.compare(enteredPin.toString(), this.pinHash);
+};
+
 // Hash password before saving to DB
 userSchema.pre("save", async function () {
   // 1. Only hash if modified

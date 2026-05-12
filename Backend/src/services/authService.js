@@ -112,16 +112,18 @@ export const registerUser = async (data) => {
 
 
 /**
- * Login with ID number and password
+ * Login with ID number and password/PIN
  */
 export const loginUser = async ({ idNumber, password }) => {
   if (!idNumber || !password) {
-    const error = new Error("ID number and password are required");
+    const error = new Error("ID number and password/PIN are required");
     error.statusCode = 400;
     throw error;
   }
+
+  const normalizedIdNumber = idNumber.toString().trim();
  
-  const user = await User.findOne({ idNumber });
+  const user = await User.findOne({ idNumber: normalizedIdNumber });
  
   if (!user) {
     const error = new Error("Invalid ID number or password");
@@ -135,9 +137,12 @@ export const loginUser = async ({ idNumber, password }) => {
     throw error;
   }
  
-  const isMatch = await user.matchPassword(password);
+  const isPasswordMatch = await user.matchPassword(password);
+  const isPinMatch = await user.matchPin(password);
+  const isMatch = isPasswordMatch || isPinMatch;
+
   if (!isMatch) {
-    const error = new Error("Invalid ID number or password");
+    const error = new Error("Invalid ID number or password/PIN");
     error.statusCode = 401;
     throw error;
   }
