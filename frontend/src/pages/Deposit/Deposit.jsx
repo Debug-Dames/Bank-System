@@ -1,8 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { depositMoney, clearStatus, fetchTransactions } from "../../features/transactionSlice";
-import { fetchAccounts, setSelectedAccount } from "../../features/accountSlice";
-
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import {
+  depositMoney,
+  clearStatus,
+  fetchTransactions,
+} from "../../features/transactionSlice";
+import {
+  fetchAccounts,
+  setSelectedAccount,
+} from "../../features/accountSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -15,16 +21,29 @@ const PRESETS = [500, 1000, 2500, 5000];
 export default function Deposit() {
   const dispatch = useDispatch();
 
-  // 🔹 Redux state
-  const { accounts, selectedAccount, isLoading: accountsLoading } =
-    useSelector((state) => state.accounts);
+  // ✅ OPTIMIZED REDUX STATE
+  const accountsState = useSelector(
+    (state) => state.accounts,
+    shallowEqual
+  );
+
+  const transactionsState = useSelector(
+    (state) => state.transactions,
+    shallowEqual
+  );
 
   const {
-    transactions,
+    accounts = [],
+    selectedAccount,
+    isLoading: accountsLoading,
+  } = accountsState;
+
+  const {
+    transactions = [],
     isLoading,
     error,
     success,
-  } = useSelector((state) => state.transactions);
+  } = transactionsState;
 
   // 🔹 Local state
   const [amount, setAmount] = useState("");
@@ -34,8 +53,16 @@ export default function Deposit() {
 
   const inputRef = useRef(null);
 
-  const numericAmount = parseFloat(amount) || 0;
-  const availableBalance = selectedAccount?.availableBalance ?? 0;
+  // ✅ MEMOIZED VALUES
+  const numericAmount = useMemo(
+    () => parseFloat(amount) || 0,
+    [amount]
+  );
+
+  const availableBalance = useMemo(
+    () => selectedAccount?.availableBalance ?? 0,
+    [selectedAccount]
+  );
 
   // ✅ Load accounts on mount
   useEffect(() => {
@@ -45,7 +72,11 @@ export default function Deposit() {
   // ✅ Fetch transactions when account changes
   useEffect(() => {
     if (selectedAccount?._id) {
-      dispatch(fetchTransactions({ accountId: selectedAccount._id }));
+      dispatch(
+        fetchTransactions({
+          accountId: selectedAccount._id,
+        })
+      );
     }
   }, [selectedAccount, dispatch]);
 
@@ -53,7 +84,9 @@ export default function Deposit() {
   useEffect(() => {
     if (success && transactions.length > 0) {
       setLastTransaction(transactions[0]);
-      dispatch(fetchAccounts()); // refresh balances
+
+      // refresh balances
+      dispatch(fetchAccounts());
     }
   }, [success, transactions, dispatch]);
 
@@ -68,14 +101,17 @@ export default function Deposit() {
       setValidation("Please select an account.");
       return false;
     }
+
     if (!amount || isNaN(amount)) {
       setValidation("Enter a valid amount.");
       return false;
     }
+
     if (numericAmount <= 0) {
       setValidation("Amount must be greater than R0.");
       return false;
     }
+
     setValidation("");
     return true;
   };
@@ -96,6 +132,7 @@ export default function Deposit() {
   const handlePreset = (val) => {
     setAmount(String(val));
     setValidation("");
+
     inputRef.current?.focus();
   };
 
@@ -104,15 +141,22 @@ export default function Deposit() {
     setValidation("");
     setShowBalance(false);
     setLastTransaction(null);
+
     dispatch(clearStatus());
   };
 
   return (
     <div className="deposit-page">
-
       <span className="deposit-glyph">R</span>
 
       <div className="card card--narrow deposit-card">
+
+        {/* ✅ LOADING STATE */}
+        {accountsLoading && (
+          <div className="alert alert--info">
+            Loading accounts...
+          </div>
+        )}
 
         {/* ✅ SUCCESS SCREEN */}
         {success && lastTransaction ? (
@@ -122,11 +166,15 @@ export default function Deposit() {
 
             <div className="deposit-success__copy">
               <p>Deposit Complete</p>
+
               <h2>
                 R{" "}
-                {lastTransaction.amount?.toLocaleString("en-ZA", {
-                  minimumFractionDigits: 2,
-                })}
+                {lastTransaction.amount?.toLocaleString(
+                  "en-ZA",
+                  {
+                    minimumFractionDigits: 2,
+                  }
+                )}
               </h2>
             </div>
 
@@ -134,24 +182,32 @@ export default function Deposit() {
 
               <div>
                 <span>Transaction ID</span>
-                <span>{lastTransaction.transactionId}</span>
+                <span>
+                  {lastTransaction.transactionId}
+                </span>
               </div>
 
               <div>
                 <span>New Balance</span>
+
                 <span>
                   R{" "}
-                  {lastTransaction.balanceAfter?.toLocaleString("en-ZA", {
-                    minimumFractionDigits: 2,
-                  })}
+                  {lastTransaction.balanceAfter?.toLocaleString(
+                    "en-ZA",
+                    {
+                      minimumFractionDigits: 2,
+                    }
+                  )}
                 </span>
               </div>
 
               <div>
                 <span>Date</span>
+
                 <span>
                   {new Date(
-                    lastTransaction.processedAt || Date.now()
+                    lastTransaction.processedAt ||
+                    Date.now()
                   ).toLocaleString("en-ZA")}
                 </span>
               </div>
@@ -178,18 +234,29 @@ export default function Deposit() {
             {/* ACCOUNT SELECT */}
             <div className="form-group">
               <label>Select Account</label>
+
               <select
                 className="form-input"
                 value={selectedAccount?._id || ""}
                 onChange={(e) => {
-                  const acc = accounts.find(a => a._id === e.target.value);
+                  const acc = accounts.find(
+                    (a) => a._id === e.target.value
+                  );
+
                   dispatch(setSelectedAccount(acc));
+
                   setShowBalance(false);
                 }}
               >
-                <option value="">-- Choose account --</option>
+                <option value="">
+                  -- Choose account --
+                </option>
+
                 {accounts.map((acc) => (
-                  <option key={acc._id} value={acc._id}>
+                  <option
+                    key={acc._id}
+                    value={acc._id}
+                  >
                     {acc.accountType || acc.name}
                   </option>
                 ))}
@@ -209,8 +276,12 @@ export default function Deposit() {
               ) : (
                 <>
                   <span>Available Balance</span>
+
                   <span>
-                    R {availableBalance.toLocaleString("en-ZA")}
+                    R{" "}
+                    {availableBalance.toLocaleString(
+                      "en-ZA"
+                    )}
                   </span>
                 </>
               )}
@@ -225,7 +296,9 @@ export default function Deposit() {
                   <button
                     key={p}
                     className={`deposit-preset ${
-                      numericAmount === p ? "deposit-preset--active" : ""
+                      numericAmount === p
+                        ? "deposit-preset--active"
+                        : ""
                     }`}
                     onClick={() => handlePreset(p)}
                     type="button"
@@ -238,17 +311,25 @@ export default function Deposit() {
               {/* INPUT */}
               <div className="form-group">
                 <label>Amount</label>
+
                 <input
                   ref={inputRef}
                   type="number"
                   placeholder="0.00"
                   className="form-input"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  disabled={!selectedAccount || isLoading}
+                  onChange={(e) =>
+                    setAmount(e.target.value)
+                  }
+                  disabled={
+                    !selectedAccount || isLoading
+                  }
                 />
+
                 {validationError && (
-                  <p className="form-error">{validationError}</p>
+                  <p className="form-error">
+                    {validationError}
+                  </p>
                 )}
               </div>
 
@@ -259,13 +340,25 @@ export default function Deposit() {
                 </div>
               )}
 
+              {/* EMPTY TRANSACTION STATE */}
+              {!isLoading &&
+                transactions.length === 0 && (
+                  <div className="alert alert--info">
+                    No recent transactions found.
+                  </div>
+                )}
+
               {/* SUBMIT */}
               <button
                 className="btn btn--primary btn--full"
                 onClick={handleDeposit}
-                disabled={!selectedAccount || isLoading}
+                disabled={
+                  !selectedAccount || isLoading
+                }
               >
-                {isLoading ? "Processing..." : "Confirm Deposit"}
+                {isLoading
+                  ? "Processing Deposit..."
+                  : "Confirm Deposit"}
               </button>
 
             </div>

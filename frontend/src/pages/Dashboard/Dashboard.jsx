@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { clearTransactions } from "../../features/transactionSlice";
@@ -133,6 +133,17 @@ export default function Dashboard() {
     setFavorites((prev) => prev.filter((x) => x !== id));
   };
 
+    // PERFORMANCE OPTIMIZATION
+  const handleClearTransactions = useCallback(() => {
+    const ok = window.confirm(
+      "Clear recent activity? (mock)"
+    );
+
+    if (!ok) return;
+
+    dispatch(clearTransactions());
+  }, [dispatch]);
+
   return (
     <div className="dashboard-view">
       <header className="dashboard-view__header">
@@ -234,11 +245,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 className="btn btn--outline btn--sm"
-                onClick={() => {
-                  const ok = window.confirm("Clear recent activity? (mock)");
-                  if (!ok) return;
-                  dispatch(clearTransactions());
-                }}
+               onClick={handleClearTransactions}
               >
                 Clear
               </button>

@@ -11,9 +11,16 @@ export const fetchTransactions = createAsyncThunk(
   async ({ accountId }, { rejectWithValue }) => {
     try {
       const res = await getTransactionHistory(accountId);
-      return res.data;
+
+      return {
+        transactions: res.data?.transactions || [],
+      };
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch transactions"
+      );
     }
   }
 );
@@ -24,9 +31,14 @@ export const depositMoney = createAsyncThunk(
   async ({ accountId, amount, note }, { rejectWithValue }) => {
     try {
       const res = await depositFunds(accountId, { amount, note });
+
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.message ||
+        err.message ||
+        "Deposit failed"
+      );
     }
   }
 );
@@ -37,23 +49,30 @@ export const withdrawMoney = createAsyncThunk(
   async ({ accountId, amount, note }, { rejectWithValue }) => {
     try {
       const res = await withdrawFunds(accountId, { amount, note });
+
       return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(
+        err.response?.data?.message ||
+        err.message ||
+        "Withdrawal failed"
+      );
     }
   }
 );
 
 const transactionSlice = createSlice({
   name: "transactions",
+
   initialState: {
     transactions: [],
     isLoading: false,
     error: null,
     success: null,
+    lastFetched: null,
+    balance: 0,
   },
 
-  // ✅ ADD THIS
   reducers: {
     clearStatus: (state) => {
       state.error = null;
@@ -71,20 +90,26 @@ const transactionSlice = createSlice({
     clearTransactions: (state) => {
       state.transactions = [];
     },
-
-    
   },
 
   extraReducers: (builder) => {
     builder
+
       // FETCH
       .addCase(fetchTransactions.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
+
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.transactions = action.payload.transactions;
+
+        state.transactions =
+          action.payload?.transactions || [];
+
+        state.lastFetched = Date.now();
       })
+
       .addCase(fetchTransactions.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
@@ -96,25 +121,49 @@ const transactionSlice = createSlice({
         state.error = null;
         state.success = null;
       })
+
       .addCase(depositMoney.fulfilled, (state, action) => {
         state.isLoading = false;
         state.success = "Deposit successful";
-        state.transactions.unshift(action.payload);
+
+        if (action.payload) {
+          state.transactions.unshift(action.payload);
+        }
       })
+
       .addCase(depositMoney.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
 
       // WITHDRAW
+      .addCase(withdrawMoney.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.success = null;
+      })
+
       .addCase(withdrawMoney.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.success = "Withdrawal successful";
-        state.transactions.unshift(action.payload);
+
+        if (action.payload) {
+          state.transactions.unshift(action.payload);
+        }
+      })
+
+      .addCase(withdrawMoney.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });
 
-// ✅ EXPORT IT HERE
-export const { clearStatus, prependTransaction, setBalance, clearTransactions } = transactionSlice.actions;
+export const {
+  clearStatus,
+  prependTransaction,
+  setBalance,
+  clearTransactions,
+} = transactionSlice.actions;
 
 export default transactionSlice.reducer;
