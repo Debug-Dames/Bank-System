@@ -10,7 +10,8 @@ import "../../components/ui/styles/button.css";
 import "./transactions.css";
 import { jsPDF } from "jspdf";
 
-const formatCurrency = (value = 0) => `R ${Number(value).toFixed(2)}`;
+const formatCurrency = (value = 0) =>
+  `R ${Number(value).toFixed(2)}`;
 
 const formatDate = (value) =>
   new Date(value).toLocaleString("en-ZA", {
@@ -24,74 +25,140 @@ const formatDate = (value) =>
 export default function Transactions() {
   const dispatch = useDispatch();
 
-  const { status, items } = useSelector(
-    (state) => state.auth.transactions
-  );
+  // ✅ USE TRANSACTION SLICE
+  const {
+    transactions,
+    isLoading,
+  } = useSelector((state) => state.transactions);
 
-  const accounts = useSelector((state) => state.auth.accounts);
-  const accountId = accounts?.items?.[0]?._id;
+  // ✅ USE ACCOUNT SLICE
+  const {
+    accounts,
+    selectedAccount,
+  } = useSelector((state) => state.accounts);
+
+  const accountId =
+    selectedAccount?._id || accounts?.[0]?._id;
 
   const [typeFilter, setTypeFilter] = useState("all");
   const [rangeFilter, setRangeFilter] = useState("30");
   const [searchTerm, setSearchTerm] = useState("");
   const [showStatement, setShowStatement] = useState(false);
 
+  // ✅ LOAD ACCOUNTS
   useEffect(() => {
-    if (accounts?.status === "idle") dispatch(fetchAccounts());
-  }, [dispatch, accounts?.status]);
+    dispatch(fetchAccounts());
+  }, [dispatch]);
 
+  // ✅ LOAD TRANSACTIONS
   useEffect(() => {
-    if (accountId && status === "idle") {
+    if (accountId) {
       dispatch(fetchTransactions({ accountId }));
     }
-  }, [dispatch, status, accountId]);
+  }, [dispatch, accountId]);
 
-  // ✅ NORMALIZE BACKEND DATA (IMPORTANT FIX)
+  // ✅ NORMALIZE BACKEND DATA
   const normalizedItems = useMemo(() => {
-    return (items || []).map((tx) => ({
+    return (transactions || []).map((tx) => ({
       ...tx,
       transactionId: tx.transactionId || tx._id,
-      date: tx.date || tx.createdAt,
-      balanceAfter: tx.balanceAfter ?? tx.balance ?? 0,
+      date:
+        tx.date ||
+        tx.createdAt ||
+        tx.processedAt,
+
+      balanceAfter:
+        tx.balanceAfter ??
+        tx.availableBalance ??
+        tx.balance ??
+        0,
     }));
-  }, [items]);
+  }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();
-    const rangeDays = rangeFilter === "all" ? null : Number(rangeFilter);
-    const search = searchTerm.trim().toLowerCase();
+
+    const rangeDays =
+      rangeFilter === "all"
+        ? null
+        : Number(rangeFilter);
+
+    const search =
+      searchTerm.trim().toLowerCase();
 
     return normalizedItems
       .filter((transaction) => {
-        if (typeFilter !== "all" && transaction.type !== typeFilter) {
+
+        if (
+          typeFilter !== "all" &&
+          transaction.type !== typeFilter
+        ) {
           return false;
         }
 
         if (rangeDays) {
-          const diffMs = now - new Date(transaction.date);
-          const diffDays = diffMs / (1000 * 60 * 60 * 24);
-          if (diffDays > rangeDays) return false;
+          const diffMs =
+            now - new Date(transaction.date);
+
+          const diffDays =
+            diffMs / (1000 * 60 * 60 * 24);
+
+          if (diffDays > rangeDays) {
+            return false;
+          }
         }
 
         if (!search) return true;
 
         return (
-          transaction.transactionId?.toLowerCase().includes(search) ||
-          transaction.type?.toLowerCase().includes(search) ||
-          String(transaction.amount).includes(search)
+          transaction.transactionId
+            ?.toLowerCase()
+            .includes(search) ||
+
+          transaction.type
+            ?.toLowerCase()
+            .includes(search) ||
+
+          String(transaction.amount)
+            .includes(search)
         );
       })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [normalizedItems, typeFilter, rangeFilter, searchTerm]);
+
+      .sort(
+        (a, b) =>
+          new Date(b.date) -
+          new Date(a.date)
+      );
+  }, [
+    normalizedItems,
+    typeFilter,
+    rangeFilter,
+    searchTerm,
+  ]);
 
   const stats = useMemo(() => {
     const totals = filteredTransactions.reduce(
       (acc, transaction) => {
-        if (transaction.type === "deposit") acc.income += transaction.amount;
-        if (transaction.type === "withdrawal") acc.outcome += transaction.amount;
+
+        if (
+          transaction.type === "deposit"
+        ) {
+          acc.income += transaction.amount;
+        }
+
+        if (
+          transaction.type === "withdrawal"
+        ) {
+          acc.outcome += transaction.amount;
+        }
+
         return acc;
       },
-      { income: 0, outcome: 0 }
+
+      {
+        income: 0,
+        outcome: 0,
+      }
     );
 
     return {
@@ -104,7 +171,12 @@ export default function Transactions() {
 
   const handleRefresh = () => {
     if (!accountId) return;
-    dispatch(fetchTransactions({ accountId }));
+
+    dispatch(
+      fetchTransactions({
+        accountId,
+      })
+    );
   };
 
   const handleDownloadPDF = () => {
@@ -114,8 +186,18 @@ export default function Transactions() {
     doc.text("NovaBank Statement", 20, 20);
 
     doc.setFontSize(12);
-    doc.text(`Account ID: ${accountId || "—"}`, 20, 35);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+
+    doc.text(
+      `Account ID: ${accountId || "—"}`,
+      20,
+      35
+    );
+
+    doc.text(
+      `Generated on: ${new Date().toLocaleDateString()}`,
+      20,
+      45
+    );
 
     let y = 60;
 
@@ -127,18 +209,33 @@ export default function Transactions() {
     y += 10;
 
     filteredTransactions.forEach((tx) => {
-      doc.text(formatDate(tx.date), 20, y);
-      doc.text(tx.type, 70, y);
+
+      doc.text(
+        formatDate(tx.date),
+        20,
+        y
+      );
+
+      doc.text(
+        tx.type,
+        70,
+        y
+      );
 
       doc.text(
         tx.type === "withdrawal"
           ? `-${formatCurrency(tx.amount)}`
           : formatCurrency(tx.amount),
+
         120,
         y
       );
 
-      doc.text(formatCurrency(tx.balanceAfter), 160, y);
+      doc.text(
+        formatCurrency(tx.balanceAfter),
+        160,
+        y
+      );
 
       y += 10;
 
@@ -149,11 +246,15 @@ export default function Transactions() {
     });
 
     doc.save(
-      `statement_${accountId || "account"}_${new Date().toISOString().split("T")[0]}.pdf`
+      `statement_${
+        accountId || "account"
+      }_${
+        new Date()
+          .toISOString()
+          .split("T")[0]
+      }.pdf`
     );
   };
-
-  const isLoading = status === "loading";
 
   return (
     <div className="transactions-page">
@@ -162,29 +263,48 @@ export default function Transactions() {
         {/* HEADER */}
         <Card>
           <header className="transactions-hero">
+
             <div>
-              <p className="transactions-hero__eyebrow">Account Activity</p>
-              <h1 className="transactions-hero__title">Transactions</h1>
+              <p className="transactions-hero__eyebrow">
+                Account Activity
+              </p>
+
+              <h1 className="transactions-hero__title">
+                Transactions
+              </h1>
+
               <p className="transactions-hero__subtitle">
                 Track deposits and withdrawals with real-time filters.
               </p>
             </div>
 
             <div className="transactions-hero__actions">
-              <Button variant="outline" onClick={handleRefresh}>
+
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+              >
                 Refresh
               </Button>
 
               <Button
                 variant="outline"
-                onClick={() => setShowStatement(!showStatement)}
+                onClick={() =>
+                  setShowStatement(!showStatement)
+                }
               >
-                {showStatement ? "Hide Statement" : "View Statement"}
+                {showStatement
+                  ? "Hide Statement"
+                  : "View Statement"}
               </Button>
 
-              <Button variant="primary" onClick={handleDownloadPDF}>
+              <Button
+                variant="primary"
+                onClick={handleDownloadPDF}
+              >
                 Download PDF
               </Button>
+
             </div>
           </header>
         </Card>
@@ -192,77 +312,126 @@ export default function Transactions() {
         {/* FILTERS */}
         <Card>
           <div className="transactions-controls">
+
             <label className="tx-control">
               <span>Type</span>
+
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) =>
+                  setTypeFilter(e.target.value)
+                }
               >
-                <option value="all">All</option>
-                <option value="deposit">Deposits</option>
-                <option value="withdrawal">Withdrawals</option>
+                <option value="all">
+                  All
+                </option>
+
+                <option value="deposit">
+                  Deposits
+                </option>
+
+                <option value="withdrawal">
+                  Withdrawals
+                </option>
               </select>
             </label>
 
             <label className="tx-control">
               <span>Range</span>
+
               <select
                 value={rangeFilter}
-                onChange={(e) => setRangeFilter(e.target.value)}
+                onChange={(e) =>
+                  setRangeFilter(e.target.value)
+                }
               >
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="all">All time</option>
+                <option value="7">
+                  Last 7 days
+                </option>
+
+                <option value="30">
+                  Last 30 days
+                </option>
+
+                <option value="90">
+                  Last 90 days
+                </option>
+
+                <option value="all">
+                  All time
+                </option>
               </select>
             </label>
 
             <label className="tx-control tx-control--search">
               <span>Search</span>
+
               <input
                 type="search"
                 placeholder="Search by ID, type, amount"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) =>
+                  setSearchTerm(e.target.value)
+                }
               />
             </label>
+
           </div>
         </Card>
 
         {/* STATS */}
         <Card>
           <div className="transactions-stats">
+
             <div className="tx-stat">
-              <p className="tx-stat__label">Transactions</p>
-              <p className="tx-stat__value">{stats.count}</p>
+              <p className="tx-stat__label">
+                Transactions
+              </p>
+
+              <p className="tx-stat__value">
+                {stats.count}
+              </p>
             </div>
 
             <div className="tx-stat">
-              <p className="tx-stat__label">Total In</p>
+              <p className="tx-stat__label">
+                Total In
+              </p>
+
               <p className="tx-stat__value tx-stat__value--in">
                 {formatCurrency(stats.income)}
               </p>
             </div>
 
             <div className="tx-stat">
-              <p className="tx-stat__label">Total Out</p>
+              <p className="tx-stat__label">
+                Total Out
+              </p>
+
               <p className="tx-stat__value tx-stat__value--out">
                 {formatCurrency(stats.outcome)}
               </p>
             </div>
 
             <div className="tx-stat tx-stat--accent">
-              <p className="tx-stat__label">Net Flow</p>
+              <p className="tx-stat__label">
+                Net Flow
+              </p>
+
               <p className="tx-stat__value">
                 {formatCurrency(stats.net)}
               </p>
             </div>
+
           </div>
         </Card>
 
         {/* LIST */}
         <Card>
-          {isLoading && <p>Loading transactions...</p>}
+
+          {isLoading && (
+            <p>Loading transactions...</p>
+          )}
 
           {!isLoading &&
             filteredTransactions.length === 0 && (
@@ -270,28 +439,58 @@ export default function Transactions() {
             )}
 
           {!isLoading &&
-            filteredTransactions.map((transaction) => (
-              <div
-                className="tx-row"
-                key={transaction.transactionId}
-              >
-                <span>{transaction.type}</span>
-                <span>
-                  {transaction.type === "withdrawal" ? "-" : "+"}
-                  {formatCurrency(transaction.amount)}
-                </span>
-                <span>{formatCurrency(transaction.balanceAfter)}</span>
-                <span>{formatDate(transaction.date)}</span>
-              </div>
-            ))}
+            filteredTransactions.map(
+              (transaction) => (
+                <div
+                  className="tx-row"
+                  key={transaction.transactionId}
+                >
+                  <span>
+                    {transaction.type}
+                  </span>
+
+                  <span>
+                    {[
+                      "withdrawal",
+                      "withdraw",
+                      "send_cash",
+                      "electricity",
+                      "data",
+                      "airtime",
+                      "transfer",
+                      "payment",
+                    ].includes(transaction.type?.toLowerCase())
+                      ? "-"
+                      : "+"}
+                    {formatCurrency(transaction.amount)}
+                  </span>
+
+                  <span>
+                    {formatCurrency(
+                      transaction.balanceAfter
+                    )}
+                  </span>
+
+                  <span>
+                    {formatDate(
+                      transaction.date
+                    )}
+                  </span>
+                </div>
+              )
+            )}
         </Card>
 
         {/* STATEMENT */}
         {showStatement && (
           <Card>
-            <h2>Statement Preview</h2>
+
+            <h2>
+              Statement Preview
+            </h2>
 
             <table className="statement-table">
+
               <thead>
                 <tr>
                   <th>Date</th>
@@ -304,16 +503,29 @@ export default function Transactions() {
               <tbody>
                 {filteredTransactions.map((tx) => (
                   <tr key={tx.transactionId}>
-                    <td>{formatDate(tx.date)}</td>
-                    <td>{tx.type}</td>
-                    <td>{formatCurrency(tx.amount)}</td>
-                    <td>{formatCurrency(tx.balanceAfter)}</td>
+                    <td>
+                      {formatDate(tx.date)}
+                    </td>
+
+                    <td>
+                      {tx.type}
+                    </td>
+
+                    <td>
+                      {formatCurrency(tx.amount)}
+                    </td>
+
+                    <td>
+                      {formatCurrency(tx.balanceAfter)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </Card>
         )}
+
       </div>
     </div>
   );
