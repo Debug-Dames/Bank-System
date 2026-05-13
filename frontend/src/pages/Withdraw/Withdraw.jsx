@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { withdraw, resetWithdraw } from "../../features/withdrawSlice";
+import { fetchAccounts, setSelectedAccount } from "../../features/accountSlice";
+import { withdrawMoney, clearStatus } from "../../features/transactionSlice";
 
 import "../../components/ui/styles/button.css";
 import "../../components/ui/styles/card.css";
@@ -10,27 +11,29 @@ import "./withdraw.css";
 
 const PRESETS = [500, 1000, 2500, 5000];
 
-// simple accounts
-const ACCOUNTS = [
-  { id: "acc_001", name: "Main Account" },
-  { id: "acc_002", name: "Savings Account" },
-];
-
 // ── Number ticker ────────────────────────────────
 function useCountUp(target, duration = 1200) {
   const [value, setValue] = useState(0);
+
   useEffect(() => {
     if (!target) return;
+
     let start = null;
+
     const step = (ts) => {
       if (!start) start = ts;
+
       const progress = Math.min((ts - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
+
       setValue(target * eased);
+
       if (progress < 1) requestAnimationFrame(step);
     };
+
     requestAnimationFrame(step);
   }, [target, duration]);
+
   return value;
 }
 
@@ -44,32 +47,45 @@ const LABEL = {
 export default function Withdraw() {
   const dispatch = useDispatch();
 
-  const { status, error, lastTransaction } = useSelector((s) => s.withdraw);
-  const { balance } = useSelector((s) => s.auth);
+  // ✅ FROM TRANSACTION SLICE (source of truth)
+  const { transactions, isLoading, error, success, balance } = useSelector(
+    (state) => state.transactions
+  );
 
-  const [selectedAccount, setSelectedAccount] = useState("");
+  // ✅ ACCOUNTS FROM ACCOUNT SLICE
+  const { accounts, selectedAccount } = useSelector(
+    (state) => state.accounts
+  );
+
   const [showBalance, setShowBalance] = useState(false);
-
   const [amount, setAmount] = useState("");
   const [validationError, setValidation] = useState("");
   const [shake, setShake] = useState(false);
 
   const inputRef = useRef(null);
 
-  // Reset 
+  // ── Load accounts
   useEffect(() => {
-    return () => dispatch(resetWithdraw());
+    dispatch(fetchAccounts());
   }, [dispatch]);
 
-  const btnLabel =
-    status === "loading"
-      ? LABEL.loading
-      : status === "succeeded"
-        ? LABEL.confirm
-        : LABEL.idle;
+  // ── Clear transaction status on unmount
+  useEffect(() => {
+    return () => dispatch(clearStatus());
+  }, [dispatch]);
+
+  // ── refresh accounts AFTER success (instant sync)
+  useEffect(() => {
+    if (success) {
+      dispatch(fetchAccounts());
+    }
+  }, [success, dispatch]);
 
   const numericAmount = parseFloat(amount) || 0;
+
+  // ✅ BALANCE COMES FROM TRANSACTION SLICE (instant update source)
   const availableBalance = balance ?? 0;
+
   const balanceAfterPreview = availableBalance - numericAmount;
 
   const showPreview =
@@ -77,10 +93,10 @@ export default function Withdraw() {
     numericAmount <= availableBalance &&
     showBalance;
 
+  const lastTransaction = transactions?.[0];
+
   const tickedAmount = useCountUp(
-    status === "succeeded" && lastTransaction
-      ? lastTransaction.amount
-      : 0
+    success && lastTransaction ? lastTransaction.amount : 0
   );
 
   const triggerShake = () => {
@@ -88,7 +104,7 @@ export default function Withdraw() {
     setTimeout(() => setShake(false), 500);
   };
 
-  
+  // ── validation
   const validate = () => {
     if (!selectedAccount) {
       setValidation("Please select an account.");
@@ -124,14 +140,16 @@ export default function Withdraw() {
     return true;
   };
 
+  // ── submit (NOW USES transactionSlice)
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     dispatch(
-      withdraw({
-        accountId: selectedAccount,
+      withdrawMoney({
+        accountId: selectedAccount?._id,
         amount: parseFloat(amount),
+        note: "Withdrawal from app",
       })
     );
   };
@@ -146,11 +164,15 @@ export default function Withdraw() {
     setAmount("");
     setValidation("");
     setShowBalance(false);
-    setSelectedAccount("");
-    dispatch(resetWithdraw());
+    dispatch(clearStatus());
   };
 
-  const isLoading = status === "loading";
+  const btnLabel =
+    isLoading
+      ? LABEL.loading
+      : success
+      ? LABEL.confirm
+      : LABEL.idle;
 
   return (
     <div className="withdraw-page">
@@ -159,8 +181,8 @@ export default function Withdraw() {
 
       <div className={`card card--narrow withdraw-card${shake ? " withdraw-card--shake" : ""}`}>
 
-         {/* ── Success ──────────────────────────────────────── */}
-        {status === "succeeded" && lastTransaction && (
+        {/* ── Success ──────────────────────────────────────── */}
+        {success && lastTransaction && (
           <div className="withdraw-success animate-fadeUp">
             <div className="withdraw-success__copy">
               <p className="withdraw-eyebrow">Transaction Complete</p>
@@ -172,17 +194,25 @@ export default function Withdraw() {
             <div className="withdraw-success__details">
               <div className="withdraw-success__row">
                 <span>Transaction ID</span>
-                <span className="withdraw-success__mono">{lastTransaction.transactionId}</span>
+                <span className="withdraw-success__mono">
+                  {lastTransaction.transactionId}
+                </span>
               </div>
+
               <div className="withdraw-success__row">
                 <span>New Balance</span>
                 <span>
-                  R {lastTransaction.balanceAfter.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                  R {lastTransaction.balanceAfter?.toLocaleString("en-ZA", {
+                    minimumFractionDigits: 2,
+                  })}
                 </span>
               </div>
+
               <div className="withdraw-success__row">
                 <span>Date</span>
-                <span>{new Date(lastTransaction.date).toLocaleString("en-ZA")}</span>
+                <span>
+                  {new Date(lastTransaction.date).toLocaleString("en-ZA")}
+                </span>
               </div>
             </div>
 
@@ -194,8 +224,8 @@ export default function Withdraw() {
           </div>
         )}
 
-        {/* ── Form ─────────────────────────────────────────── */}
-        {status !== "succeeded" && (
+        {/* ── FORM ─────────────────────────────────────────── */}
+        {!success && (
           <>
             <div className="card__head">
               <div>
@@ -207,27 +237,30 @@ export default function Withdraw() {
               </div>
             </div>
 
-            {/* ✅ Account Select */}
+            {/* ACCOUNT SELECT (FIXED) */}
             <div className="form-group withdraw-account">
               <label className="form-label">Select Account</label>
               <select
                 className="form-input"
-                value={selectedAccount}
+                value={selectedAccount?._id || ""}
                 onChange={(e) => {
-                  setSelectedAccount(e.target.value);
+                  const acc = accounts.find(
+                    (a) => a._id === e.target.value
+                  );
+                  dispatch(setSelectedAccount(acc));
                   setShowBalance(false);
                 }}
               >
                 <option value="">-- Choose account --</option>
-                {ACCOUNTS.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name}
+                {accounts.map((acc) => (
+                  <option key={acc._id} value={acc._id}>
+                    {acc.accountType || acc.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Live balance */}
+            {/* BALANCE */}
             <div className="withdraw-balance">
               {!showBalance ? (
                 <button
@@ -240,9 +273,13 @@ export default function Withdraw() {
                 </button>
               ) : (
                 <>
-                  <span className="withdraw-balance__label">Available Balance</span>
+                  <span className="withdraw-balance__label">
+                    Available Balance
+                  </span>
                   <span className="withdraw-balance__amount">
-                    R {availableBalance.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                    R {availableBalance.toLocaleString("en-ZA", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </>
               )}
@@ -250,13 +287,15 @@ export default function Withdraw() {
 
             <form className="withdraw-form" onSubmit={handleSubmit} noValidate>
 
-              {/* Preset amounts */}
+              {/* PRESETS */}
               <div className="withdraw-presets">
                 {PRESETS.map((p) => (
                   <button
                     key={p}
                     type="button"
-                    className={`withdraw-preset${numericAmount === p ? " withdraw-preset--active" : ""}`}
+                    className={`withdraw-preset${
+                      numericAmount === p ? " withdraw-preset--active" : ""
+                    }`}
                     onClick={() => handlePreset(p)}
                     disabled={!showBalance || p > availableBalance}
                   >
@@ -265,11 +304,23 @@ export default function Withdraw() {
                 ))}
               </div>
 
-              {/* Amount input */}
+              {/* INPUT */}
               <div className="form-group">
                 <label className="form-label">Amount (ZAR)</label>
-                <div className={`input-wrapper${validationError ? " input-wrapper--error" : ""}`}>
-                  <span className={`input-prefix${amount ? " input-prefix--active" : ""}`}>R</span>
+
+                <div
+                  className={`input-wrapper${
+                    validationError ? " input-wrapper--error" : ""
+                  }`}
+                >
+                  <span
+                    className={`input-prefix${
+                      amount ? " input-prefix--active" : ""
+                    }`}
+                  >
+                    R
+                  </span>
+
                   <input
                     ref={inputRef}
                     type="number"
@@ -279,29 +330,41 @@ export default function Withdraw() {
                     disabled={isLoading || !showBalance}
                   />
                 </div>
-                {validationError && <p className="form-error">{validationError}</p>}
+
+                {validationError && (
+                  <p className="form-error">{validationError}</p>
+                )}
               </div>
 
-              {/* Live preview */}
-              <div className={`withdraw-preview${showPreview ? " withdraw-preview--visible" : ""}`}>
+              {/* PREVIEW */}
+              <div
+                className={`withdraw-preview${
+                  showPreview ? " withdraw-preview--visible" : ""
+                }`}
+              >
                 <span>Balance after withdrawal</span>
                 <span>
-                  R {Math.max(balanceAfterPreview, 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                  R {Math.max(balanceAfterPreview, 0).toLocaleString(
+                    "en-ZA",
+                    { minimumFractionDigits: 2 }
+                  )}
                 </span>
               </div>
 
-              {/* API error */}
-              {status === "failed" && error && (
+              {/* ERROR */}
+              {error && (
                 <div className="alert alert--error">
                   <span className="alert__indicator" />
                   <span className="alert__message">{error}</span>
                 </div>
               )}
 
-              {/* Submit */}
+              {/* SUBMIT */}
               <button
                 type="submit"
-                className={`btn btn--primary btn--full withdraw-btn${isLoading ? " withdraw-btn--loading" : ""}`}
+                className={`btn btn--primary btn--full withdraw-btn${
+                  isLoading ? " withdraw-btn--loading" : ""
+                }`}
                 disabled={isLoading}
               >
                 {btnLabel}
