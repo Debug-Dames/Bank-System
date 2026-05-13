@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { depositMoney, clearStatus, fetchTransactions } from "../../features/transactionSlice";
-import { fetchAccounts, setSelectedAccount } from "../../features/accountSlice";
+import { fetchAccounts, setSelectedAccount, updateAccountBalance } from "../../features/accountSlice";
 
 
 import "../../components/ui/styles/button.css";
@@ -39,7 +39,9 @@ export default function Deposit() {
 
   // ✅ Load accounts on mount
   useEffect(() => {
-    dispatch(fetchAccounts());
+    setTimeout(() => {
+      dispatch(fetchAccounts());
+    }, 800);
   }, [dispatch]);
 
   // ✅ Fetch transactions when account changes
@@ -52,10 +54,25 @@ export default function Deposit() {
   // ✅ Capture latest transaction after deposit
   useEffect(() => {
     if (success && transactions.length > 0) {
-      setLastTransaction(transactions[0]);
-      dispatch(fetchAccounts()); // refresh balances
+      const tx = transactions[0];
+
+      setLastTransaction(tx);
+
+      const updatedBalance =
+        tx?.balanceAfter ??
+        tx?.account?.availableBalance ??
+        tx?.availableBalance;
+
+      if (selectedAccount?._id && updatedBalance != null) {
+        dispatch(
+          updateAccountBalance({
+            accountId: selectedAccount._id,
+            balance: updatedBalance,
+          })
+        );
+      }
     }
-  }, [success, transactions, dispatch]);
+  }, [success, transactions, dispatch, selectedAccount]);
 
   // ✅ Cleanup
   useEffect(() => {
