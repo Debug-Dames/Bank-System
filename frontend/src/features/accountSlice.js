@@ -32,6 +32,22 @@ const accountSlice = createSlice({
     setSelectedAccount: (state, action) => {
       state.selectedAccount = action.payload;
     },
+
+    updateAccountBalance: (state, action) => {
+      const { accountId, balance } = action.payload;
+
+      // update selected account instantly
+      if (state.selectedAccount?._id === accountId) {
+        state.selectedAccount.availableBalance = balance;
+      }
+
+      // update list
+      state.accounts = state.accounts.map((acc) =>
+        acc._id === accountId
+          ? { ...acc, availableBalance: balance }
+          : acc
+      );
+    },
   },
 
   extraReducers: (builder) => {
@@ -55,5 +71,5 @@ const accountSlice = createSlice({
   },
 });
 
-export const { setSelectedAccount } = accountSlice.actions;
+export const { setSelectedAccount, updateAccountBalance } = accountSlice.actions;
 export default accountSlice.reducer;
