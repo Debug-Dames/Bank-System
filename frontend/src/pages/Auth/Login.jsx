@@ -13,7 +13,7 @@ export default function Login() {
 
   const [formData, setFormData] = useState({
     username: '',
-    pin: '',
+    password: '',
   });
 
   const [error, setError] = useState('');
@@ -34,16 +34,16 @@ export default function Login() {
     setSuccess('');
     setLoading(true);
 
-    if (!formData.username || !formData.pin) {
-      setError('Please enter both ID number and password.');
+    if (!formData.username.trim() || !formData.password) {
+      setError('Please enter both ID number and password or PIN.');
       setLoading(false);
       return;
     }
 
     dispatch(
       login({
-        idNumber: formData.username,
-        password: formData.pin,
+        idNumber: formData.username.trim(),
+        password: formData.password,
       })
     )
       .unwrap()
@@ -97,14 +97,14 @@ export default function Login() {
             </div>
 
             <div className="auth-field">
-              <label htmlFor="pin">Password</label>
+              <label htmlFor="pin">Password or PIN</label>
               <input
                 id="pin"
-                name="pin"
+                name="password"
                 type="password"
-                value={formData.pin}
+                value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter your password"
+                placeholder="Enter your password or PIN"
                 autoComplete="current-password"
               />
             </div>

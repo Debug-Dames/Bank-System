@@ -3,11 +3,12 @@
 services:
 
   backend:
-    build: ./backend
+    build: ./Backend
     container_name: bank-backend
     ports:
       - "5000:5000"
     environment:
+      - PORT=5000
       - MONGO_URI=mongodb://mongo:27017/bankdb
       - JWT_SECRET=your_secret_key
     depends_on:
@@ -35,8 +36,39 @@ services:
     networks:
       - app-network
 
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: bank-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: bank-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - app-network
+
 volumes:
   mongo-data:
+  grafana-data:
 
 networks:
   app-network:

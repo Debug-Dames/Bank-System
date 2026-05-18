@@ -105,17 +105,8 @@ export async function buyAirtime(
   return response.data;
 }
 
-export async function buyElectricity(
-  accountIdOrOptions,
-  payload = {}
-) {
-  const { accountId, payload: body } =
-    normalizeAccountArgs(accountIdOrOptions, payload);
-
-  const response = await api.post(
-    `/transactions/${accountId}/utility/electricity`,
-    body
-  );
-
-  return response.data;
+export async function buyElectricity(accountIdOrOptions, payload = {}) {
+  const { accountId, payload: body } = normalizeAccountArgs(accountIdOrOptions, payload);
+  return api.post(`/transactions/${accountId}/utility/electricity`, body);
 }
+5
