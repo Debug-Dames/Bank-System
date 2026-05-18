@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { prependTransaction, setBalance } from "./transactionSlice";
+import { updateAccountBalance } from "./accountSlice";
 import {
   getSavingsPlansAPI,
   createSavingsPlanAPI,
@@ -200,7 +201,7 @@ export const withdrawFromSavingsAccount = createAsyncThunk(
 
 export const depositToSavingsPlan = createAsyncThunk(
   "savings/depositToSavingsPlan",
-  async ({ planId, amount }, { rejectWithValue }) => {
+  async ({ planId, amount }, { dispatch, rejectWithValue }) => {
     try {
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
@@ -208,7 +209,18 @@ export const depositToSavingsPlan = createAsyncThunk(
       }
 
       const response = await addToSavingsPlanAPI({ planId, amount: numericAmount });
-      return { plan: response?.data };
+      const data = response?.data || {};
+
+      if (data?.account?._id && data?.account?.availableBalance != null) {
+        dispatch(
+          updateAccountBalance({
+            accountId: data.account._id,
+            balance: data.account.availableBalance,
+          })
+        );
+      }
+
+      return { plan: data?.plan || data, account: data?.account };
     } catch (error) {
       return rejectWithValue(error?.message || "Savings plan deposit failed");
     }
@@ -217,7 +229,7 @@ export const depositToSavingsPlan = createAsyncThunk(
 
 export const withdrawFromSavingsPlan = createAsyncThunk(
   "savings/withdrawFromSavingsPlan",
-  async ({ planId, amount }, { rejectWithValue }) => {
+  async ({ planId, amount }, { dispatch, rejectWithValue }) => {
     try {
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
@@ -225,7 +237,18 @@ export const withdrawFromSavingsPlan = createAsyncThunk(
       }
 
       const response = await withdrawFromSavingsPlanAPI({ planId, amount: numericAmount });
-      return { plan: response?.data };
+      const data = response?.data || {};
+
+      if (data?.account?._id && data?.account?.availableBalance != null) {
+        dispatch(
+          updateAccountBalance({
+            accountId: data.account._id,
+            balance: data.account.availableBalance,
+          })
+        );
+      }
+
+      return { plan: data?.plan || data, account: data?.account };
     } catch (error) {
       return rejectWithValue(error?.message || "Savings plan withdrawal failed");
     }
@@ -259,7 +282,7 @@ export const createSavingsPlan = createAsyncThunk(
 
 export const addToSavingsPlan = createAsyncThunk(
   "savings/addToSavingsPlan",
-  async ({ planId, amount }, { rejectWithValue }) => {
+  async ({ planId, amount }, { dispatch, rejectWithValue }) => {
     try {
       const numericAmount = Number(amount);
       if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
@@ -267,7 +290,18 @@ export const addToSavingsPlan = createAsyncThunk(
       }
 
       const response = await addToSavingsPlanAPI({ planId, amount: numericAmount });
-      return response?.data;
+      const data = response?.data || {};
+
+      if (data?.account?._id && data?.account?.availableBalance != null) {
+        dispatch(
+          updateAccountBalance({
+            accountId: data.account._id,
+            balance: data.account.availableBalance,
+          })
+        );
+      }
+
+      return data?.plan || data;
     } catch (error) {
       return rejectWithValue(error?.message || "Failed to add to savings plan");
     }

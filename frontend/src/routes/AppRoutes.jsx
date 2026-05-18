@@ -18,7 +18,7 @@ import SavingsPlans from "../pages/Savings/SavingsPlans";
 // Layout
 import AppLayout from '../components/layout/AppLayout';
 
-const isAuthenticated = () => true;
+const isAuthenticated = () => Boolean(localStorage.getItem("token"));
 
 function PrivateRoute({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;

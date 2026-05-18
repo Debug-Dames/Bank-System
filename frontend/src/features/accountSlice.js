@@ -8,12 +8,10 @@ export const fetchAccounts = createAsyncThunk(
     try {
       const res = await getAccounts();
 
-      console.log("ACCOUNT RESPONSE:", res.data);
-
-      return res.data;
+      return Array.isArray(res.data) ? res.data : res.data?.accounts || [];
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || err.message
+        err.response?.data?.message || err.message || "Failed to load accounts"
       );
     }
   }
@@ -54,14 +52,16 @@ const accountSlice = createSlice({
     builder
       .addCase(fetchAccounts.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchAccounts.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.accounts = action.payload;
+        state.error = null;
+        state.accounts = action.payload || [];
         
         // auto-select first account
-        if (!state.selectedAccount && action.payload.length > 0) {
-          state.selectedAccount = action.payload[0];
+        if (!state.selectedAccount && state.accounts.length > 0) {
+          state.selectedAccount = state.accounts[0];
         }
       })
       .addCase(fetchAccounts.rejected, (state, action) => {

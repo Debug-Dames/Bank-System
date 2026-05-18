@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAccounts, setSelectedAccount } from "../../features/accountSlice";
+import {
+  fetchAccounts,
+  setSelectedAccount,
+  updateAccountBalance,
+} from "../../features/accountSlice";
 import { withdrawMoney, clearStatus } from "../../features/transactionSlice";
 
 import "../../components/ui/styles/button.css";
@@ -48,12 +52,17 @@ export default function Withdraw() {
   const dispatch = useDispatch();
 
   // ✅ FROM TRANSACTION SLICE (source of truth)
-  const { transactions, isLoading, error, success, balance } = useSelector(
+  const { transactions, isLoading, error, success } = useSelector(
     (state) => state.transactions
   );
 
   // ✅ ACCOUNTS FROM ACCOUNT SLICE
-  const { accounts, selectedAccount } = useSelector(
+  const {
+    accounts,
+    selectedAccount,
+    isLoading: accountsLoading,
+    error: accountsError,
+  } = useSelector(
     (state) => state.accounts
   );
 
@@ -77,14 +86,32 @@ export default function Withdraw() {
   // ── refresh accounts AFTER success (instant sync)
   useEffect(() => {
     if (success) {
+      const tx = transactions?.[0];
+      const updatedBalance =
+        tx?.balanceAfter ??
+        tx?.account?.availableBalance ??
+        tx?.availableBalance;
+
+      if (selectedAccount?._id && updatedBalance != null) {
+        dispatch(
+          updateAccountBalance({
+            accountId: selectedAccount._id,
+            balance: updatedBalance,
+          })
+        );
+      }
+
       dispatch(fetchAccounts());
     }
-  }, [success, dispatch]);
+  }, [success, transactions, dispatch, selectedAccount]);
 
   const numericAmount = parseFloat(amount) || 0;
 
   // ✅ BALANCE COMES FROM TRANSACTION SLICE (instant update source)
-  const availableBalance = balance ?? 0;
+  const availableBalance =
+    selectedAccount?.availableBalance ??
+    selectedAccount?.balance ??
+    0;
 
   const balanceAfterPreview = availableBalance - numericAmount;
 
@@ -126,6 +153,12 @@ export default function Withdraw() {
 
     if (parseFloat(amount) <= 0) {
       setValidation("Amount must be greater than R 0.00.");
+      triggerShake();
+      return false;
+    }
+
+    if (parseFloat(amount) < 50) {
+      setValidation("Minimum withdrawal amount is R50.");
       triggerShake();
       return false;
     }
@@ -174,6 +207,12 @@ export default function Withdraw() {
       ? LABEL.confirm
       : LABEL.idle;
 
+  const withdrawDisabled =
+    accountsLoading ||
+    Boolean(accountsError) ||
+    !selectedAccount ||
+    isLoading;
+
   return (
     <div className="withdraw-page">
 
@@ -211,7 +250,9 @@ export default function Withdraw() {
               <div className="withdraw-success__row">
                 <span>Date</span>
                 <span>
-                  {new Date(lastTransaction.date).toLocaleString("en-ZA")}
+                  {new Date(
+                    lastTransaction.processedAt || lastTransaction.date || Date.now()
+                  ).toLocaleString("en-ZA")}
                 </span>
               </div>
             </div>
@@ -243,6 +284,7 @@ export default function Withdraw() {
               <select
                 className="form-input"
                 value={selectedAccount?._id || ""}
+                disabled={accountsLoading || Boolean(accountsError)}
                 onChange={(e) => {
                   const acc = accounts.find(
                     (a) => a._id === e.target.value
@@ -251,13 +293,23 @@ export default function Withdraw() {
                   setShowBalance(false);
                 }}
               >
-                <option value="">-- Choose account --</option>
+                <option value="">
+                  {accountsLoading ? "Loading accounts..." : "-- Choose account --"}
+                </option>
                 {accounts.map((acc) => (
                   <option key={acc._id} value={acc._id}>
                     {acc.accountType || acc.name}
                   </option>
                 ))}
               </select>
+              {accountsError && (
+                <p className="form-error">{accountsError}</p>
+              )}
+              {!accountsLoading && !accountsError && accounts.length === 0 && (
+                <p className="form-error">
+                  No account found. Please log in again.
+                </p>
+              )}
             </div>
 
             {/* BALANCE */}
@@ -267,7 +319,7 @@ export default function Withdraw() {
                   type="button"
                   className="btn btn--ghost btn--sm"
                   onClick={() => setShowBalance(true)}
-                  disabled={!selectedAccount}
+                  disabled={withdrawDisabled}
                 >
                   View Balance
                 </button>
@@ -327,7 +379,7 @@ export default function Withdraw() {
                     className="form-input"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    disabled={isLoading || !showBalance}
+                    disabled={withdrawDisabled || !showBalance}
                   />
                 </div>
 
@@ -365,9 +417,9 @@ export default function Withdraw() {
                 className={`btn btn--primary btn--full withdraw-btn${
                   isLoading ? " withdraw-btn--loading" : ""
                 }`}
-                disabled={isLoading}
+                disabled={withdrawDisabled}
               >
-                {btnLabel}
+                {accountsLoading ? "Loading Accounts..." : btnLabel}
               </button>
 
             </form>

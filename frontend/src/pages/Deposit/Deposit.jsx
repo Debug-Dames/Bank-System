@@ -16,7 +16,12 @@ export default function Deposit() {
   const dispatch = useDispatch();
 
   // 🔹 Redux state
-  const { accounts, selectedAccount, isLoading: accountsLoading } =
+  const {
+    accounts,
+    selectedAccount,
+    isLoading: accountsLoading,
+    error: accountsError,
+  } =
     useSelector((state) => state.accounts);
 
   const {
@@ -93,6 +98,10 @@ export default function Deposit() {
       setValidation("Amount must be greater than R0.");
       return false;
     }
+    if (numericAmount < 10) {
+      setValidation("Minimum deposit amount is R10.");
+      return false;
+    }
     setValidation("");
     return true;
   };
@@ -109,6 +118,12 @@ export default function Deposit() {
       })
     );
   };
+
+  const depositDisabled =
+    accountsLoading ||
+    !selectedAccount ||
+    isLoading ||
+    Boolean(accountsError);
 
   const handlePreset = (val) => {
     setAmount(String(val));
@@ -198,19 +213,30 @@ export default function Deposit() {
               <select
                 className="form-input"
                 value={selectedAccount?._id || ""}
+                disabled={accountsLoading || Boolean(accountsError)}
                 onChange={(e) => {
                   const acc = accounts.find(a => a._id === e.target.value);
                   dispatch(setSelectedAccount(acc));
                   setShowBalance(false);
                 }}
               >
-                <option value="">-- Choose account --</option>
+                <option value="">
+                  {accountsLoading ? "Loading accounts..." : "-- Choose account --"}
+                </option>
                 {accounts.map((acc) => (
                   <option key={acc._id} value={acc._id}>
                     {acc.accountType || acc.name}
                   </option>
                 ))}
               </select>
+              {accountsError && (
+                <p className="form-error">{accountsError}</p>
+              )}
+              {!accountsLoading && !accountsError && accounts.length === 0 && (
+                <p className="form-error">
+                  No account found. Open an account before depositing.
+                </p>
+              )}
             </div>
 
             {/* BALANCE */}
@@ -262,7 +288,7 @@ export default function Deposit() {
                   className="form-input"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  disabled={!selectedAccount || isLoading}
+                  disabled={depositDisabled}
                 />
                 {validationError && (
                   <p className="form-error">{validationError}</p>
@@ -280,9 +306,13 @@ export default function Deposit() {
               <button
                 className="btn btn--primary btn--full"
                 onClick={handleDeposit}
-                disabled={!selectedAccount || isLoading}
+                disabled={depositDisabled}
               >
-                {isLoading ? "Processing..." : "Confirm Deposit"}
+                {accountsLoading
+                  ? "Loading Accounts..."
+                  : isLoading
+                  ? "Processing..."
+                  : "Confirm Deposit"}
               </button>
 
             </div>

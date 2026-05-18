@@ -8,6 +8,7 @@ import {
   deleteSavingsPlan,
   clearLastAction
 } from "../../features/savingsSlice";
+import { fetchAccounts } from "../../features/accountSlice";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -22,13 +23,18 @@ export default function SavingsPlans() {
   const {
     plans = [],
     error,
-    savingsBalance = 0,
     lastPlanAction,
     transferError,
     lastTransferAction,
   } = useSelector((state) => state.savings);
 
-  const { balance = 0 } = useSelector((state) => state.auth);
+  const { accounts = [], selectedAccount } = useSelector((state) => state.accounts);
+  const mainAccount = selectedAccount || accounts[0];
+  const balance = mainAccount?.availableBalance ?? mainAccount?.balance ?? 0;
+  const savingsBalance = plans.reduce(
+    (total, plan) => total + Number(plan?.currentAmount || 0),
+    0
+  );
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -44,7 +50,14 @@ export default function SavingsPlans() {
 
   useEffect(() => {
     dispatch(fetchSavingsPlans());
+    dispatch(fetchAccounts());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (lastTransferAction) {
+      dispatch(fetchAccounts());
+    }
+  }, [dispatch, lastTransferAction]);
 
   useEffect(() => {
     if (lastPlanAction || lastTransferAction) {
