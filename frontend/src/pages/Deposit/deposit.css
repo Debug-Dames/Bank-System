@@ -107,6 +107,10 @@
   margin-bottom: 20px;
 }
 
+.form-input {
+  margin-bottom: 15px;
+}
+
 .form-input option {
   background: #1A1A1A;
   color: var(--gradient-gold);

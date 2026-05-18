@@ -98,6 +98,23 @@ const Icons = {
       <line x1="2" y1="11.5" x2="9" y2="11.5" />
     </svg>
   ),
+  Savings: (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 8h12l-1 4H3l-1-4z" />
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="11" cy="12" r="1" />
+      <path d="M4 4V2a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+    </svg>
+  ),
   Profile: (
     <svg
       width="16"
@@ -121,6 +138,7 @@ const NAV_LINKS = [
   { to: "/transact", label: "Transact", icon: Icons.Transact },
   { to: "/deposit", label: "Deposit", icon: Icons.Deposit },
   { to: "/withdraw", label: "Withdraw", icon: Icons.Withdraw },
+  { to: "/savings", label: "Savings", icon: Icons.Savings },
   { to: "/transactions", label: "Transactions", icon: Icons.Transactions },
   { to: "/profile", label: "Profile", icon: Icons.Profile },
 ];

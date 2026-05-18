@@ -1,14 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
-import { prependTransaction, setBalance } from "../../features/authSlice";
+import { prependTransaction, setBalance } from "../../features/transactionSlice";
+import { fetchAccounts, updateAccountBalance, } from "../../features/accountSlice";
 import {
   buyAirtime,
-  buyData,
+  // buyData,
   buyElectricity,
-  payBeneficiary,
+  // payBeneficiary,
   sendCash,
-} from "../../service/mockApi";
+} from "../../service/transactions";
 
 import "../../components/ui/styles/alert.css";
 import "../../components/ui/styles/button.css";
@@ -30,8 +31,22 @@ const DATA_BUNDLES = ["500MB", "1GB", "2GB", "5GB", "10GB"];
 export default function Transact() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const accountId = useSelector((state) => state.auth?.account?.id) || "acc_001";
-  const balance = useSelector((state) => state.auth?.balance ?? 0);
+  const accountsState = useSelector(
+  (state) => state.accounts
+);
+
+  const selectedAccount =
+    accountsState?.selectedAccount;
+
+  const accounts =
+    accountsState?.accounts || [];
+
+  const accountId =
+    selectedAccount?._id ||
+    accounts?.[0]?._id;
+
+  const balance =
+    selectedAccount?.availableBalance ?? 0;
 
   const tab = useMemo(() => {
     const requested = String(searchParams.get("tab") || "").toLowerCase();
@@ -86,64 +101,118 @@ export default function Transact() {
     setResult(null);
   }, []);
 
-  const commitTx = useCallback((tx) => {
-    dispatch(setBalance(tx.balanceAfter));
-    dispatch(prependTransaction(tx));
-  }, [dispatch]);
+  useEffect(() => {
+  dispatch(fetchAccounts());
+}, [dispatch]);
+
+  const commitTx = useCallback(
+    (tx) => {
+      const updatedBalance =
+        Number(
+          tx?.balanceAfter ??
+          tx?.account?.availableBalance ??
+          tx?.availableBalance ??
+          0
+        );
+
+      const cleanTx = {
+        ...tx,
+        amount: Number(tx?.amount ?? tx?.transactionAmount ?? 0),
+        balanceAfter: updatedBalance,
+      };
+
+      // update transactions slice
+      dispatch(setBalance(updatedBalance));
+      dispatch(prependTransaction(cleanTx));
+
+      // 🔥 update accounts slice (THIS fixes UI lag)
+      dispatch(
+        updateAccountBalance({
+          accountId,
+          balance: updatedBalance,
+        })
+      );
+    },
+    [dispatch, accountId]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     resetFeedback();
+
     setStatus("loading");
 
     try {
+      if (!accountId) {
+        throw new Error("No account selected");
+      }
+
       let tx;
+
+      // AIRTIME
       if (tab === "airtime") {
-        tx = await buyAirtime({
-          accountId,
-          provider: airtime.provider,
-          phone: airtime.phone,
+        tx = await buyAirtime(accountId, {
+          network: airtime.provider,
+          phoneNumber: airtime.phone,
           amount: airtime.amount,
-        });
-      } else if (tab === "data") {
-        tx = await buyData({
-          accountId,
-          provider: data.provider,
-          phone: data.phone,
-          bundle: data.bundle,
-          amount: data.amount,
-        });
-      } else if (tab === "electricity") {
-        tx = await buyElectricity({
-          accountId,
-          meterNumber: electricity.meterNumber,
-          amount: electricity.amount,
-        });
-      } else if (tab === "beneficiary") {
-        tx = await payBeneficiary({
-          accountId,
-          beneficiaryName: beneficiary.beneficiaryName,
-          bank: beneficiary.bank,
-          beneficiaryAccount: beneficiary.beneficiaryAccount,
-          reference: beneficiary.reference,
-          amount: beneficiary.amount,
-        });
-      } else {
-        tx = await sendCash({
-          accountId,
-          recipientName: cashSend.recipientName,
-          phone: cashSend.phone,
-          reference: cashSend.note,
-          amount: cashSend.amount,
-          pin: cashSend.pin,
+          type: "Airtime",
         });
       }
 
+      // DATA
+      else if (tab === "data") {
+        tx = await buyAirtime(accountId, {
+          network: data.provider,
+          phoneNumber: data.phone,
+          amount: data.amount,
+          type: "Data",
+        });
+      }
+
+      // ELECTRICITY
+      else if (tab === "electricity") {
+        tx = await buyElectricity(accountId, {
+          meterNumber: electricity.meterNumber,
+          amount: electricity.amount,
+        });
+      }
+
+      // SEND CASH
+      else if (tab === "sendcash") {
+        tx = await sendCash(accountId, {
+          recipientName: cashSend.recipientName,
+          recipientPhone: cashSend.phone,
+          amount: cashSend.amount,
+          secretPin: cashSend.pin,
+          note: cashSend.note,
+        });
+      }
+
+      // BENEFICIARY
+      else if (tab === "beneficiary") {
+        throw new Error(
+          "Beneficiary transfer API not connected yet"
+        );
+      }
       commitTx(tx);
       setResult(tx);
+
       setStatus("succeeded");
+
+      // Refresh accounts after transaction
+      setTimeout(() => {
+        dispatch(fetchAccounts());
+      }, 1000);
     } catch (err) {
-      setError(err?.message || "Transaction failed");
+      console.error(err);
+
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Transaction failed"
+      );
+
       setStatus("failed");
     }
   };
@@ -191,7 +260,6 @@ export default function Transact() {
           <h2 className="card__title">
             {TABS.find((t) => t.id === tab)?.label}
           </h2>
-          <span className="pill pill--muted">Mock</span>
         </div>
 
         {status === "failed" && (
@@ -205,14 +273,23 @@ export default function Transact() {
           <div className="alert alert--success">
             <span className="alert__indicator" />
             <span className="alert__message">
-              Successful: {result.type} • R{" "}
-              {Number(result.amount).toLocaleString("en-ZA", {
-                minimumFractionDigits: 2,
-              })}{" "}
-              • New balance R{" "}
-              {Number(result.balanceAfter).toLocaleString("en-ZA", {
-                minimumFractionDigits: 2,
-              })}
+              Successful: {result?.type || "Transaction"} • R{" "}
+                {Number(
+                  result?.amount ??
+                  result?.transactionAmount ??
+                  0
+                ).toLocaleString("en-ZA", {
+                  minimumFractionDigits: 2,
+                })}
+                {" "}• New balance R{" "}
+                {Number(
+                  result?.balanceAfter ??
+                  result?.account?.availableBalance ??
+                  result?.availableBalance ??
+                  0
+                ).toLocaleString("en-ZA", {
+                  minimumFractionDigits: 2,
+                })}
             </span>
           </div>
         )}

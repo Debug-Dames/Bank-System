@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from 'react-router-dom';
+import { login } from "../../features/authSlice";
 import './auth.css';
 
 import Button from "../../components/ui/Button";
@@ -7,6 +9,7 @@ import Alert from "../../components/ui/Alert";
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -32,34 +35,28 @@ export default function Login() {
     setLoading(true);
 
     if (!formData.username || !formData.pin) {
-      setError('Please enter both username and PIN.');
+      setError('Please enter both ID number and password.');
       setLoading(false);
       return;
     }
 
-    const savedUser = JSON.parse(localStorage.getItem('registeredUser'));
-
-    if (!savedUser) {
-      setError('No registered account found. Please register first.');
-      setLoading(false);
-      return;
-    }
-
-    const usernameMatches = formData.username === savedUser.email;
-    const pinMatches = formData.pin === savedUser.password;
-
-    if (!usernameMatches || !pinMatches) {
-      setError('Invalid username or PIN.');
-      setLoading(false);
-      return;
-    }
-
-    localStorage.setItem('currentUser', JSON.stringify(savedUser));
-    setSuccess('Login successful. Redirecting...');
-
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1000);
+    dispatch(
+      login({
+        idNumber: formData.username,
+        password: formData.pin,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        setSuccess('Login successful. Redirecting...');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+      })
+      .catch((err) => {
+        setError(err || 'Login failed');
+        setLoading(false);
+      });
   };
 
   return (
@@ -72,7 +69,9 @@ export default function Login() {
             className="auth-logo"
           />
           <h1 className="auth-page-title">Welcome Back</h1>
-          <p className="auth-page-subtitle">Sign in to continue to your account.</p>
+          <p className="auth-page-subtitle">
+            Sign in with your ID number to continue.
+          </p>
         </div>
 
         <section className="auth-panel">
@@ -85,27 +84,27 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="auth-field">
-              <label htmlFor="username">Email</label>
+              <label htmlFor="username">ID Number</label>
               <input
                 id="username"
                 name="username"
-                type="email"
+                type="text"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="test@bank.com"
-                autoComplete="email"
+                placeholder="Enter your ID number"
+                autoComplete="username"
               />
             </div>
 
             <div className="auth-field">
-              <label htmlFor="pin">PIN</label>
+              <label htmlFor="pin">Password</label>
               <input
                 id="pin"
                 name="pin"
                 type="password"
                 value={formData.pin}
                 onChange={handleChange}
-                placeholder="Enter your PIN"
+                placeholder="Enter your password"
                 autoComplete="current-password"
               />
             </div>

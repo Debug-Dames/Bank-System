@@ -74,6 +74,12 @@ frontend/
 - Node.js v18+
 - npm v9+
 
+### Windows note (Vite `spawn EPERM`)
+
+If you see browser console errors like “Failed to load resource … 500 (Internal Server Error)” and the terminal shows `Error: spawn EPERM` while starting Vite, it can be caused by Vite trying to run `net use` in locked-down Windows environments.
+
+This repo includes a small local patch in `frontend/node_modules/vite/dist/node/chunks/node.js` that makes Vite ignore that failure instead of crashing.
+
 ### Installation
 
 ```bash

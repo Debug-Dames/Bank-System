@@ -2,9 +2,15 @@ name: Full Stack CI Pipeline
  
 on:
   push:
+<<<<<<< HEAD
     branches: [ "main , dev" ]
   pull_request:
     branches: [ "main , dev" ]
+=======
+    branches: [ main , dev ]
+  pull_request:
+    branches: [ main , dev ]
+>>>>>>> 5b935de6f4c08165440abd86ff6f7c158ac716a2
  
 jobs:
   backend:
@@ -37,7 +43,11 @@ jobs:
  
     defaults:
       run:
+<<<<<<< HEAD
         working-directory: ./Frontend
+=======
+        working-directory: ./frontend
+>>>>>>> 5b935de6f4c08165440abd86ff6f7c158ac716a2
  
     steps:
       - name: Checkout code
@@ -53,4 +63,7 @@ jobs:
  
       - name: Build frontend
         run: npm run build
+<<<<<<< HEAD
         
+=======
+>>>>>>> 5b935de6f4c08165440abd86ff6f7c158ac716a2

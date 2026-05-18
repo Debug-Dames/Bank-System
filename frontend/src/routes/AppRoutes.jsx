@@ -13,6 +13,7 @@ import Profile from '../pages/Profile/Profile';
 import Cards from '../pages/Cards/Cards';
 import Transact from "../pages/Transact/Transact";
 import Landing from "../pages/Landing/Landing";
+import SavingsPlans from "../pages/Savings/SavingsPlans";
 
 // Layout
 import AppLayout from '../components/layout/AppLayout';
@@ -49,6 +50,7 @@ export default function AppRoutes() {
         <Route path="withdraw" element={<Withdraw />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="savings" element={<SavingsPlans />} />
         
         
       </Route>
